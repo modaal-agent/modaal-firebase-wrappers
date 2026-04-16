@@ -2,6 +2,9 @@ name: SampleApp
 options:
   createIntermediateGroups: true
   developmentLanguage: en
+packages:
+  ModaalFirebase:
+    path: ../..
 targets:
   SampleApp:
     type: application
@@ -13,3 +16,6 @@ targets:
         CODE_SIGNING_ALLOWED: "NO"
         PRODUCT_BUNDLE_IDENTIFIER: dev.modaal.firebase.sample-app
         GENERATE_INFOPLIST_FILE: "YES"
+    dependencies:
+      - package: ModaalFirebase
+        product: ModaalFirebaseCore
