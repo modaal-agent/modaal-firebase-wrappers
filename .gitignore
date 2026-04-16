@@ -1,0 +1,19 @@
+# Build artifacts
+.build/
+DerivedData/
+
+# Generated Xcode projects (XcodeGen output)
+*.xcodeproj
+
+# Generated Info.plist (XcodeGen output — scoped to SampleApp only)
+Examples/**/Info.plist
+
+# Xcode user data
+xcuserdata/
+
+# SPM
+.swiftpm/xcode/
+Package.resolved
+
+# macOS
+.DS_Store

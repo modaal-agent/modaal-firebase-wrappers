@@ -1,0 +1,15 @@
+name: SampleApp
+options:
+  createIntermediateGroups: true
+  developmentLanguage: en
+targets:
+  SampleApp:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources: [SampleApp]
+    settings:
+      base:
+        CODE_SIGNING_ALLOWED: "NO"
+        PRODUCT_BUNDLE_IDENTIFIER: dev.modaal.firebase.sample-app
+        GENERATE_INFOPLIST_FILE: "YES"
