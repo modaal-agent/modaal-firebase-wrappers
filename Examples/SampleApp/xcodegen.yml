@@ -31,3 +31,5 @@ targets:
         product: ModaalCloudStorage
       - package: ModaalFirebase
         product: ModaalFirebaseMessaging
+      - package: ModaalFirebase
+        product: ModaalFirebaseRemoteConfig
