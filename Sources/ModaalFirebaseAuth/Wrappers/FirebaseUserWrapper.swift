@@ -44,6 +44,26 @@ final class FirebaseUserWrapper: FirebaseUserInfoWrapper, FirebaseUserProtocol {
     }
   }
 
+  func unlink(fromProvider provider: String, completion: @escaping (Result<FirebaseUserProtocol, Error>) -> Void) {
+    user.unlink(fromProvider: provider) { user, error in
+      if let user {
+        completion(.success(FirebaseUserWrapper(user: user)))
+      } else {
+        completion(.failure(error ?? NSError(domain: "Unknown error", code: -1)))
+      }
+    }
+  }
+
+  func reauthenticate(with credential: FirebaseAuthCredentialProtocol, completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) {
+    user.reauthenticate(with: credential as! AuthCredential) { result, error in
+      if let result {
+        completion(.success(FirebaseAuthDataResultWrapper(result: result)))
+      } else {
+        completion(.failure(error ?? NSError(domain: "Unknown error", code: -1)))
+      }
+    }
+  }
+
   func sendEmailVerification(completion: @escaping (Result<Void, Error>) -> Void) {
     user.sendEmailVerification { error in
       if let error {
@@ -63,6 +83,46 @@ final class FirebaseUserWrapper: FirebaseUserInfoWrapper, FirebaseUserProtocol {
         completion(.failure(error))
       } else {
         completion(.success(()))
+      }
+    }
+  }
+
+  func updatePassword(to password: String, completion: @escaping (Result<Void, Error>) -> Void) {
+    user.updatePassword(to: password) { error in
+      if let error {
+        completion(.failure(error))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+
+  func reload(completion: @escaping (Result<Void, Error>) -> Void) {
+    user.reload { error in
+      if let error {
+        completion(.failure(error))
+      } else {
+        completion(.success(()))
+      }
+    }
+  }
+
+  func getIDToken(completion: @escaping (Result<String, Error>) -> Void) {
+    user.getIDToken { token, error in
+      if let token {
+        completion(.success(token))
+      } else {
+        completion(.failure(error ?? NSError(domain: "Unknown error", code: -1)))
+      }
+    }
+  }
+
+  func getIDTokenResult(completion: @escaping (Result<FirebaseAuthTokenResultProtocol, Error>) -> Void) {
+    user.getIDTokenResult { result, error in
+      if let result {
+        completion(.success(FirebaseAuthTokenResultWrapper(result: result)))
+      } else {
+        completion(.failure(error ?? NSError(domain: "Unknown error", code: -1)))
       }
     }
   }

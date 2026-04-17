@@ -15,4 +15,14 @@ public protocol FirebaseRemoteConfigProtocol: AnyObject {
   func configValue(forKey key: String) -> RemoteConfigValueProtocol
   func allKeys(from source: ModaalRemoteConfigSource) -> [String]
   func setDefaults(_ defaults: [String: NSObject]?)
+
+  func addOnConfigUpdateListener(_ listener: @escaping (Result<RemoteConfigUpdateProtocol, Error>) -> Void) -> RemoteConfigListenerRegistration
+}
+
+public protocol RemoteConfigListenerRegistration: AnyObject {
+  func remove()
+}
+
+public protocol RemoteConfigUpdateProtocol {
+  var updatedKeys: Set<String> { get }
 }

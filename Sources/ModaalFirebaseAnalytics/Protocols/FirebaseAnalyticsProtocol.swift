@@ -7,4 +7,6 @@ public protocol FirebaseAnalyticsProtocol {
   func logEvent(name: String, parameters: [String: Any]?)
   func setUserProperty(_ value: String?, forName name: String)
   func setUserID(_ userID: String?)
+  func setAnalyticsCollectionEnabled(_ enabled: Bool)
+  func resetAnalyticsData()
 }

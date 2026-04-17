@@ -4,7 +4,9 @@
 import FirebaseMessaging
 
 public final class FirebaseMessagingWrapper: FirebaseMessagingProtocol {
-  let messaging: Messaging
+  /// The underlying `Messaging` instance. Use for APIs not yet covered by this wrapper.
+  /// Requires `import FirebaseMessaging` at the call site.
+  public let messaging: Messaging
 
   public init(messaging: Messaging) {
     self.messaging = messaging

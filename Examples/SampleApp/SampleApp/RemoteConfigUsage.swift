@@ -53,6 +53,17 @@ func exerciseRemoteConfig(_ config: FirebaseRemoteConfigProtocol) {
   // Defaults
   config.setDefaults(["feature_flag": true as NSObject, "timeout": 30 as NSObject])
   config.setDefaults(nil)
+
+  // Real-time config update listener
+  let listener = config.addOnConfigUpdateListener { result in
+    switch result {
+    case .success(let update):
+      _ = update.updatedKeys
+    case .failure(let error):
+      _ = error.localizedDescription
+    }
+  }
+  listener.remove()
 }
 
 // MARK: - RemoteConfigValueProtocol

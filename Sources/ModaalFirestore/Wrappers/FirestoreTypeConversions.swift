@@ -56,3 +56,15 @@ extension FirestoreAggregateSource {
     }
   }
 }
+
+// MARK: - FirestoreSource -> FirebaseFirestore.FirestoreSource
+
+extension FirestoreSource {
+  var asFirestoreType: FirebaseFirestore.FirestoreSource {
+    switch self {
+    case .default: return .default
+    case .server: return .server
+    case .cache: return .cache
+    }
+  }
+}

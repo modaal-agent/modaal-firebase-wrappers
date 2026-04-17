@@ -25,12 +25,28 @@ public protocol CloudFileStoring {
 
   // MARK: - Upload data
 
+  // MARK: - Metadata
+
+  /// Asynchronously retrieves metadata for the object at the current path.
+  func getMetadata() -> AnyPublisher<CloudStorageMetadata, Error>
+
+  /// Asynchronously updates metadata for the object at the current path.
+  func updateMetadata(_ metadata: CloudStorageMetadata) -> AnyPublisher<CloudStorageMetadata, Error>
+
+  // MARK: - Upload data
+
   /// Asynchronously uploads data to the currently specified storage reference.
   /// This is not recommended for large files, and one should instead upload a file from disk.
   func putData(_ data: Data) -> AnyPublisher<Void, Error>
 
+  /// Asynchronously uploads data with metadata (e.g., content type).
+  func putData(_ data: Data, metadata: CloudStorageMetadata) -> AnyPublisher<Void, Error>
+
   /// Asynchronously uploads a file to the currently specified storage reference.
   func uploadFromFile(localURL: URL) -> AnyPublisher<Void, Error>
+
+  /// Asynchronously uploads a file with metadata (e.g., content type).
+  func uploadFromFile(localURL: URL, metadata: CloudStorageMetadata) -> AnyPublisher<Void, Error>
 
   /// Asynchronously delete the object at the current path.
   func delete() -> AnyPublisher<Void, Error>

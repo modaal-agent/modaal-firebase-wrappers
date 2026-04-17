@@ -5,6 +5,8 @@ import Foundation
 
 public protocol QuerySnapshotProtocol: AnyObject {
   var documents: [DocumentSnapshotProtocol] { get }
+  var documentChanges: [DocumentChangeProtocol] { get }
   var count: Int { get }
   var isEmpty: Bool { get }
+  var metadata: SnapshotMetadataProtocol { get }
 }

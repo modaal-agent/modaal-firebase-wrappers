@@ -24,7 +24,11 @@ final class DocumentReferenceWrapper: DocumentReferenceProtocol {
   }
 
   func getDocument(completion: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) {
-    documentRef.getDocument { snapshot, error in
+    getDocument(source: .default, completion: completion)
+  }
+
+  func getDocument(source: FirestoreSource, completion: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) {
+    documentRef.getDocument(source: source.asFirestoreType) { snapshot, error in
       if let snapshot {
         completion(.success(DocumentSnapshotWrapper(snapshot: snapshot)))
       } else {

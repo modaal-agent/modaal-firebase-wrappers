@@ -11,6 +11,7 @@ public protocol DocumentReferenceProtocol: AnyObject {
   func collection(_ path: String) -> CollectionReferenceProtocol
 
   func getDocument(completion: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void)
+  func getDocument(source: FirestoreSource, completion: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void)
   func setData(_ data: [String: Any], mergeOption: MergeOption, completion: @escaping (Result<Void, Error>) -> Void)
   func updateData(_ fields: [String: Any], completion: @escaping (Result<Void, Error>) -> Void)
   func delete(completion: @escaping (Result<Void, Error>) -> Void)

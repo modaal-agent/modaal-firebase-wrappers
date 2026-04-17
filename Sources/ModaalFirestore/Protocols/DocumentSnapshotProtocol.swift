@@ -7,6 +7,7 @@ public protocol DocumentSnapshotProtocol: AnyObject {
   var documentID: String { get }
   var exists: Bool { get }
   var reference: DocumentReferenceProtocol { get }
+  var metadata: SnapshotMetadataProtocol { get }
   func data() -> [String: Any]?
   func get(_ field: String) -> Any?
 }

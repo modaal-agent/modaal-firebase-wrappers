@@ -5,6 +5,7 @@ import Foundation
 
 public protocol FirestoreProtocol: AnyObject {
   func collection(_ collectionPath: String) -> CollectionReferenceProtocol
+  func collectionGroup(_ collectionID: String) -> QueryProtocol
   func document(_ documentPath: String) -> DocumentReferenceProtocol
   func batch() -> WriteBatchProtocol
   func runTransaction(_ updateBlock: @escaping (TransactionProtocol) throws -> Any?,

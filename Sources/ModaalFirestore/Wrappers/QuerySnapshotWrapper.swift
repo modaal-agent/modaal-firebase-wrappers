@@ -14,6 +14,11 @@ final class QuerySnapshotWrapper: QuerySnapshotProtocol {
     snapshot.documents.map { DocumentSnapshotWrapper(snapshot: $0) }
   }
 
+  var documentChanges: [DocumentChangeProtocol] {
+    snapshot.documentChanges.map { DocumentChangeWrapper(change: $0) }
+  }
+
   var count: Int { snapshot.count }
   var isEmpty: Bool { snapshot.isEmpty }
+  var metadata: SnapshotMetadataProtocol { snapshot.metadata }
 }

@@ -30,6 +30,11 @@ func exerciseStorageRef(_ ref: CloudStorageReferencing) {
   let _: CloudStorageReferencing? = ref.parent()
   let _: CloudStorageReferencing = ref.root()
 
+  // Navigation chain
+  let nested = ref.child(path: "a").child(path: "b")
+  _ = nested.parent()
+  _ = nested.root()
+
   // Inherited CloudFileStoring
   exerciseFileStoring(ref)
 
@@ -46,9 +51,20 @@ func exerciseFileStoring(_ file: CloudFileStoring) {
   let _: AnyPublisher<URL, Error> = file.downloadToFile(localURL: URL(fileURLWithPath: "/tmp/file"))
   let _: AnyPublisher<URL, Error> = file.getDownloadURL()
 
-  // Uploads
+  // Metadata
+  let _: AnyPublisher<CloudStorageMetadata, Error> = file.getMetadata()
+  let _: AnyPublisher<CloudStorageMetadata, Error> = file.updateMetadata(
+    CloudStorageMetadata(contentType: "image/jpeg")
+  )
+
+  // Uploads (without metadata)
   let _: AnyPublisher<Void, Error> = file.putData(Data())
   let _: AnyPublisher<Void, Error> = file.uploadFromFile(localURL: URL(fileURLWithPath: "/tmp/file"))
+
+  // Uploads (with metadata)
+  let meta = CloudStorageMetadata(contentType: "image/png", customMetadata: ["source": "camera"])
+  let _: AnyPublisher<Void, Error> = file.putData(Data(), metadata: meta)
+  let _: AnyPublisher<Void, Error> = file.uploadFromFile(localURL: URL(fileURLWithPath: "/tmp/file"), metadata: meta)
 
   // Delete
   let _: AnyPublisher<Void, Error> = file.delete()
@@ -67,6 +83,25 @@ func exerciseCollectionStoring(_ collection: CloudCollectionStoring) {
 func exerciseListResult(_ result: CloudStorageListResultProtocol) {
   let _: [CloudStorageReferencing] = result.prefixes()
   let _: [CloudStorageReferencing] = result.items()
+}
+
+// MARK: - CloudStorageMetadata
+
+/// Exercises CloudStorageMetadata struct.
+func exerciseCloudStorageMetadata() {
+  // Upload metadata (settable properties)
+  var meta = CloudStorageMetadata(contentType: "application/pdf")
+  meta.contentType = "image/jpeg"
+  meta.cacheControl = "max-age=3600"
+  meta.customMetadata = ["author": "Alice"]
+
+  // Read-only properties (populated from server response)
+  _ = meta.size
+  _ = meta.name
+  _ = meta.path
+  _ = meta.timeCreated
+  _ = meta.updated
+  _ = meta.md5Hash
 }
 
 // MARK: - FileStoring

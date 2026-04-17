@@ -6,7 +6,9 @@ import FirebaseAuth
 import FirebaseCore
 
 public final class FirebaseAuthWrapper: FirebaseAuthProtocol {
-  let auth: Auth
+  /// The underlying `Auth` instance. Use for APIs not yet covered by this wrapper.
+  /// Requires `import FirebaseAuth` at the call site.
+  public let auth: Auth
 
   public init(auth: Auth) {
     self.auth = auth
@@ -57,6 +59,17 @@ public final class FirebaseAuthWrapper: FirebaseAuthProtocol {
     }
   }
 
+  public func signIn(withEmail email: String, password: String, completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) {
+    auth.signIn(withEmail: email, password: password) { result, error in
+      if let result {
+        completion(.success(FirebaseAuthDataResultWrapper(result: result)))
+      } else {
+        let error = error ?? NSError(domain: "Unknown error", code: -1)
+        completion(.failure(error))
+      }
+    }
+  }
+
   public func signOut() throws {
     try auth.signOut()
   }
@@ -90,6 +103,17 @@ public final class FirebaseAuthWrapper: FirebaseAuthProtocol {
         completion(.failure(error))
       } else {
         completion(.success(()))
+      }
+    }
+  }
+
+  public func revokeToken(withAuthorizationCode authorizationCode: String, completion: @escaping (Result<Void, Error>) -> Void) {
+    Task {
+      do {
+        try await auth.revokeToken(withAuthorizationCode: authorizationCode)
+        completion(.success(()))
+      } catch {
+        completion(.failure(error))
       }
     }
   }

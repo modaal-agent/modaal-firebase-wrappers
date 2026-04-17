@@ -11,10 +11,14 @@ func exerciseAnalytics(_ analytics: FirebaseAnalyticsProtocol) {
   analytics.setUserProperty("premium", forName: "account_type")
   analytics.setUserID("user-123")
   analytics.setUserID(nil)
+
+  // Privacy controls
+  analytics.setAnalyticsCollectionEnabled(true)
+  analytics.setAnalyticsCollectionEnabled(false)
+  analytics.resetAnalyticsData()
 }
 
 /// Exercises wrapper instantiation.
-func exerciseAnalyticsWrapper() {
-  let wrapper = FirebaseAnalyticsWrapper()
-  exerciseAnalytics(wrapper)
+func exerciseAnalyticsWrapperInstantiation() {
+  let _: FirebaseAnalyticsWrapper.Type = FirebaseAnalyticsWrapper.self
 }

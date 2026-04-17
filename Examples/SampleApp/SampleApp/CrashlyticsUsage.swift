@@ -7,6 +7,10 @@ import ModaalFirebaseCrashlytics
 /// Exercises every public API on ModaalFirebaseCrashlytics.
 /// This function is never called — it only needs to compile.
 func exerciseCrashlytics(_ crashlytics: FirebaseCrashlyticsProtocol) {
+  // Note: isCrashlyticsCollectionEnabled is accessible directly on the concrete
+  // Crashlytics instance (direct extension conformance pattern — the consumer
+  // already has the real type).
+
   crashlytics.setUserID("user-123")
   crashlytics.setUserID(nil)
   crashlytics.setCustomValue("premium", forKey: "account_type")

@@ -10,12 +10,17 @@ import ModaalFirestore
 /// This function is never called — it only needs to compile.
 func exerciseFirestore(_ db: FirestoreProtocol) {
   let _: CollectionReferenceProtocol = db.collection("users")
+  let _: QueryProtocol = db.collectionGroup("comments")
   let _: DocumentReferenceProtocol = db.document("users/alice")
   let _: WriteBatchProtocol = db.batch()
 
+  // Transaction with actual reads and writes
+  let docRef = db.document("counters/visits")
   db.runTransaction({ transaction in
-    // Transaction usage exercised in exerciseTransaction
-    return nil
+    let snap = try transaction.getDocument(docRef)
+    let currentCount = snap.get("count") as? Int ?? 0
+    transaction.updateData(["count": currentCount + 1], forDocument: docRef)
+    return currentCount + 1
   }) { result in
     switch result {
     case .success(let value): _ = value
@@ -59,16 +64,29 @@ func exerciseDocumentRef(_ ref: DocumentReferenceProtocol) {
   _ = ref.path
   let _: CollectionReferenceProtocol = ref.parent
 
-  // Subcollection
-  let _: CollectionReferenceProtocol = ref.collection("posts")
+  // Subcollection chain: doc → collection → doc → collection
+  let posts = ref.collection("posts")
+  let firstPost = posts.document("post1")
+  let comments = firstPost.collection("comments")
+  let _: DocumentReferenceProtocol = comments.document("comment1")
 
-  // Read
+  // Read (default source)
   ref.getDocument { result in
     switch result {
     case .success(let snapshot): _ = snapshot.documentID
     case .failure: break
     }
   }
+
+  // Read (explicit source)
+  ref.getDocument(source: .cache) { result in
+    switch result {
+    case .success(let snapshot): _ = snapshot.metadata.isFromCache
+    case .failure: break
+    }
+  }
+
+  ref.getDocument(source: .server) { _ in }
 
   // Write — all MergeOption variants
   ref.setData(["name": "Alice"], mergeOption: .overwrite) { _ in }
@@ -84,7 +102,10 @@ func exerciseDocumentRef(_ ref: DocumentReferenceProtocol) {
   // Snapshot listener
   let listener = ref.addSnapshotListener { result in
     switch result {
-    case .success(let snapshot): _ = snapshot.exists
+    case .success(let snapshot):
+      _ = snapshot.exists
+      _ = snapshot.metadata.hasPendingWrites
+      _ = snapshot.metadata.isFromCache
     case .failure: break
     }
   }
@@ -100,6 +121,10 @@ func exerciseDocumentSnapshot(_ snapshot: DocumentSnapshotProtocol) {
   let _: DocumentReferenceProtocol = snapshot.reference
   _ = snapshot.data()
   _ = snapshot.get("name")
+
+  // Metadata
+  _ = snapshot.metadata.hasPendingWrites
+  _ = snapshot.metadata.isFromCache
 }
 
 // MARK: - QueryProtocol
@@ -108,6 +133,9 @@ func exerciseDocumentSnapshot(_ snapshot: DocumentSnapshotProtocol) {
 func exerciseQuery(_ query: QueryProtocol) {
   // Filtering
   let _: QueryProtocol = query.whereFilter(.equalTo(.field("name"), value: "Alice"))
+
+  // Filter with FieldPath.documentId
+  let _: QueryProtocol = query.whereFilter(.equalTo(.documentId, value: "abc123"))
 
   // Ordering
   let _: QueryProtocol = query.order(by: .field("createdAt"), descending: true)
@@ -122,7 +150,7 @@ func exerciseQuery(_ query: QueryProtocol) {
     .order(by: .field("age"), descending: false)
     .limit(to: 20)
 
-  // Get documents
+  // Get documents (default source)
   query.getDocuments { result in
     switch result {
     case .success(let snapshot): _ = snapshot.documents
@@ -130,10 +158,26 @@ func exerciseQuery(_ query: QueryProtocol) {
     }
   }
 
+  // Get documents (explicit source)
+  query.getDocuments(source: .cache) { _ in }
+  query.getDocuments(source: .server) { _ in }
+
   // Snapshot listener
   let listener = query.addSnapshotListener { result in
     switch result {
-    case .success(let snapshot): _ = snapshot.count
+    case .success(let snapshot):
+      _ = snapshot.count
+      // Incremental document changes
+      for change in snapshot.documentChanges {
+        switch change.type {
+        case .added: _ = change.document.documentID
+        case .modified: _ = change.oldIndex
+        case .removed: _ = change.newIndex
+        }
+      }
+      // Snapshot metadata
+      _ = snapshot.metadata.hasPendingWrites
+      _ = snapshot.metadata.isFromCache
     case .failure: break
     }
   }
@@ -143,13 +187,57 @@ func exerciseQuery(_ query: QueryProtocol) {
   let _: AggregateQueryProtocol = query.count
 }
 
+// MARK: - Pagination cursors
+
+/// Exercises document-based and field-value-based pagination.
+func exercisePagination(_ query: QueryProtocol, snapshot: DocumentSnapshotProtocol) {
+  // Document-based cursors
+  let _: QueryProtocol = query.start(atDocument: snapshot)
+  let _: QueryProtocol = query.start(afterDocument: snapshot)
+  let _: QueryProtocol = query.end(atDocument: snapshot)
+  let _: QueryProtocol = query.end(beforeDocument: snapshot)
+
+  // Field-value-based cursors
+  let _: QueryProtocol = query.start(at: ["Alice", 30])
+  let _: QueryProtocol = query.start(after: ["Alice", 30])
+  let _: QueryProtocol = query.end(at: ["Zara", 99])
+  let _: QueryProtocol = query.end(before: ["Zara", 99])
+
+  // Paginated query pattern
+  let _: QueryProtocol = query
+    .order(by: .field("name"), descending: false)
+    .limit(to: 25)
+    .start(afterDocument: snapshot)
+}
+
 // MARK: - QuerySnapshotProtocol
 
 /// Exercises every property on QuerySnapshotProtocol.
 func exerciseQuerySnapshot(_ snapshot: QuerySnapshotProtocol) {
   let _: [DocumentSnapshotProtocol] = snapshot.documents
+  let _: [DocumentChangeProtocol] = snapshot.documentChanges
   _ = snapshot.count
   _ = snapshot.isEmpty
+  _ = snapshot.metadata.hasPendingWrites
+  _ = snapshot.metadata.isFromCache
+}
+
+// MARK: - DocumentChangeProtocol
+
+/// Exercises DocumentChangeProtocol.
+func exerciseDocumentChange(_ change: DocumentChangeProtocol) {
+  let _: DocumentChangeType = change.type
+  let _: DocumentSnapshotProtocol = change.document
+  _ = change.oldIndex
+  _ = change.newIndex
+}
+
+// MARK: - SnapshotMetadataProtocol
+
+/// Exercises SnapshotMetadataProtocol.
+func exerciseSnapshotMetadata(_ metadata: SnapshotMetadataProtocol) {
+  _ = metadata.hasPendingWrites
+  _ = metadata.isFromCache
 }
 
 // MARK: - WriteBatchProtocol
@@ -211,6 +299,7 @@ func exerciseAggregateQuery(_ query: AggregateQueryProtocol) {
 /// Exercises Filter enum construction (all cases).
 func exerciseFilters() {
   _ = Filter.equalTo(.field("name"), value: "Alice")
+  _ = Filter.equalTo(.documentId, value: "abc123")
   _ = Filter.notEqualTo(.field("name"), value: "Bob")
   _ = Filter.greaterThan(.field("age"), value: 18)
   _ = Filter.greaterThanOrEqualTo(.field("age"), value: 18)
@@ -247,6 +336,19 @@ func exerciseMergeOptions() {
 /// Exercises FirestoreAggregateSource enum.
 func exerciseAggregateSource() {
   _ = FirestoreAggregateSource.server
+}
+
+/// Exercises FirestoreSource enum (all cases).
+func exerciseFirestoreSource() {
+  _ = FirestoreSource.default
+  _ = FirestoreSource.server
+  _ = FirestoreSource.cache
+}
+
+/// Exercises DocumentChangeType enum (all cases).
+func exerciseDocumentChangeType() {
+  let types: [DocumentChangeType] = [.added, .modified, .removed]
+  _ = types
 }
 
 // MARK: - Wrapper instantiation

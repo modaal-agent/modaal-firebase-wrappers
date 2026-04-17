@@ -4,7 +4,9 @@
 import FirebaseFirestore
 
 public final class FirestoreWrapper: FirestoreProtocol {
-  let firestore: Firestore
+  /// The underlying `Firestore` instance. Use for APIs not yet covered by this wrapper.
+  /// Requires `import FirebaseFirestore` at the call site.
+  public let firestore: Firestore
 
   public init(firestore: Firestore) {
     self.firestore = firestore
@@ -14,6 +16,10 @@ public final class FirestoreWrapper: FirestoreProtocol {
 
   public func collection(_ collectionPath: String) -> CollectionReferenceProtocol {
     CollectionReferenceWrapper(collectionRef: firestore.collection(collectionPath))
+  }
+
+  public func collectionGroup(_ collectionID: String) -> QueryProtocol {
+    QueryWrapper(query: firestore.collectionGroup(collectionID))
   }
 
   public func document(_ documentPath: String) -> DocumentReferenceProtocol {

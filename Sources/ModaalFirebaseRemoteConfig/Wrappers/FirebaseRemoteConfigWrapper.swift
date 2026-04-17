@@ -4,7 +4,9 @@
 import FirebaseRemoteConfig
 
 public final class FirebaseRemoteConfigWrapper: FirebaseRemoteConfigProtocol {
-  let remoteConfig: RemoteConfig
+  /// The underlying `RemoteConfig` instance. Use for APIs not yet covered by this wrapper.
+  /// Requires `import FirebaseRemoteConfig` at the call site.
+  public let remoteConfig: RemoteConfig
 
   public init(remoteConfig: RemoteConfig) {
     self.remoteConfig = remoteConfig
@@ -83,16 +85,47 @@ public final class FirebaseRemoteConfigWrapper: FirebaseRemoteConfigProtocol {
   }
 
   public func allKeys(from source: ModaalRemoteConfigSource) -> [String] {
-    remoteConfig.allKeys(from: source.asFirestoreType)
+    remoteConfig.allKeys(from: source.asRemoteConfigType)
   }
 
   public func setDefaults(_ defaults: [String: NSObject]?) {
     remoteConfig.setDefaults(defaults)
   }
+
+  public func addOnConfigUpdateListener(_ listener: @escaping (Result<RemoteConfigUpdateProtocol, Error>) -> Void) -> RemoteConfigListenerRegistration {
+    let registration = remoteConfig.addOnConfigUpdateListener { update, error in
+      if let update {
+        listener(.success(RemoteConfigUpdateWrapper(update: update)))
+      } else {
+        listener(.failure(error ?? NSError(domain: "Unknown error", code: -1)))
+      }
+    }
+    return RemoteConfigListenerRegistrationWrapper(registration: registration)
+  }
+}
+
+private final class RemoteConfigListenerRegistrationWrapper: RemoteConfigListenerRegistration {
+  let registration: ConfigUpdateListenerRegistration
+
+  init(registration: ConfigUpdateListenerRegistration) {
+    self.registration = registration
+  }
+
+  func remove() { registration.remove() }
+}
+
+private final class RemoteConfigUpdateWrapper: RemoteConfigUpdateProtocol {
+  let update: RemoteConfigUpdate
+
+  init(update: RemoteConfigUpdate) {
+    self.update = update
+  }
+
+  var updatedKeys: Set<String> { update.updatedKeys }
 }
 
 extension ModaalRemoteConfigSource {
-  var asFirestoreType: RemoteConfigSource {
+  var asRemoteConfigType: RemoteConfigSource {
     switch self {
     case .remote: return .remote
     case .default: return .default

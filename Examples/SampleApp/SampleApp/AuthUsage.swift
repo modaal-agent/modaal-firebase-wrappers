@@ -28,6 +28,14 @@ func exerciseAuth(_ auth: FirebaseAuthProtocol) {
     case .failure(let err): _ = err.localizedDescription
     }
   }
+
+  auth.signIn(withEmail: "a@b.com", password: "pw") { result in
+    switch result {
+    case .success(let data): _ = data.user.uid
+    case .failure: break
+    }
+  }
+
   try? auth.signOut()
 
   // User management
@@ -36,6 +44,9 @@ func exerciseAuth(_ auth: FirebaseAuthProtocol) {
   if let user = auth.currentUser {
     auth.deleteUser(user) { _ in }
   }
+
+  // Token revocation (Apple Sign-In requirement)
+  auth.revokeToken(withAuthorizationCode: "auth_code") { _ in }
 
   // signIn(with:) — exercised via exerciseAuthCredential
   // canHandleOpenUrl, setAPNSToken, canHandleRemoteNotification
@@ -67,13 +78,36 @@ func exerciseUser(_ user: FirebaseUserProtocol) {
   // Metadata
   exerciseUserMetadata(user.metadata)
 
-  // Methods
+  // Profile updates
   user.sendEmailVerification { _ in }
   user.updateUserProfile(displayName: "Name", photoURL: nil) { _ in }
   user.updateUserProfile(displayName: nil, photoURL: URL(string: "https://example.com/photo.jpg")) { _ in }
+  user.updatePassword(to: "newPassword123") { _ in }
+  user.reload { _ in }
+
+  // ID tokens (for backend API authentication)
+  user.getIDToken { result in
+    switch result {
+    case .success(let token): _ = token
+    case .failure: break
+    }
+  }
+
+  user.getIDTokenResult { result in
+    switch result {
+    case .success(let tokenResult):
+      _ = tokenResult.token
+      _ = tokenResult.expirationDate
+      _ = tokenResult.authDate
+      _ = tokenResult.issuedAtDate
+      _ = tokenResult.signInProvider
+      _ = tokenResult.claims
+    case .failure: break
+    }
+  }
 }
 
-/// Exercises signIn(with:) and link(with:) which require a credential.
+/// Exercises signIn(with:), link(with:), unlink, and reauthenticate which require a credential.
 func exerciseAuthCredential(_ credential: FirebaseAuthCredentialProtocol,
                             auth: FirebaseAuthProtocol,
                             user: FirebaseUserProtocol) {
@@ -89,6 +123,20 @@ func exerciseAuthCredential(_ credential: FirebaseAuthCredentialProtocol,
   }
 
   user.link(with: credential) { _ in }
+
+  user.unlink(fromProvider: "google.com") { result in
+    switch result {
+    case .success(let updatedUser): _ = updatedUser.uid
+    case .failure: break
+    }
+  }
+
+  user.reauthenticate(with: credential) { result in
+    switch result {
+    case .success(let data): _ = data.user
+    case .failure: break
+    }
+  }
 }
 
 // MARK: - FirebaseAuthDataResultProtocol
@@ -97,6 +145,18 @@ func exerciseAuthCredential(_ credential: FirebaseAuthCredentialProtocol,
 func exerciseAuthDataResult(_ result: FirebaseAuthDataResultProtocol) {
   let _: FirebaseUserProtocol = result.user
   let _: FirebaseAuthCredentialProtocol? = result.credential
+}
+
+// MARK: - FirebaseAuthTokenResultProtocol
+
+/// Exercises FirebaseAuthTokenResultProtocol properties.
+func exerciseAuthTokenResult(_ result: FirebaseAuthTokenResultProtocol) {
+  _ = result.token
+  _ = result.expirationDate
+  _ = result.authDate
+  _ = result.issuedAtDate
+  _ = result.signInProvider
+  _ = result.claims
 }
 
 // MARK: - FirebaseUserMetadataProtocol

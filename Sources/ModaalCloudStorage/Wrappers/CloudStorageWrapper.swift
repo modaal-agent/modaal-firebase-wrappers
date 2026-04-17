@@ -4,7 +4,9 @@
 import FirebaseStorage
 
 public final class CloudStorageWrapper: CloudStorageProtocol {
-  let storage: Storage
+  /// The underlying `Storage` instance. Use for APIs not yet covered by this wrapper.
+  /// Requires `import FirebaseStorage` at the call site.
+  public let storage: Storage
 
   public init(storage: Storage) {
     self.storage = storage

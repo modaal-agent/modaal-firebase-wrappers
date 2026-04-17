@@ -17,4 +17,12 @@ public final class FirebaseAnalyticsWrapper: FirebaseAnalyticsProtocol {
   public func setUserID(_ userID: String?) {
     Analytics.setUserID(userID)
   }
+
+  public func setAnalyticsCollectionEnabled(_ enabled: Bool) {
+    Analytics.setAnalyticsCollectionEnabled(enabled)
+  }
+
+  public func resetAnalyticsData() {
+    Analytics.resetAnalyticsData()
+  }
 }

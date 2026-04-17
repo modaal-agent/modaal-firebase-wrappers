@@ -13,6 +13,7 @@ final class DocumentSnapshotWrapper: DocumentSnapshotProtocol {
   var documentID: String { snapshot.documentID }
   var exists: Bool { snapshot.exists }
   var reference: DocumentReferenceProtocol { DocumentReferenceWrapper(documentRef: snapshot.reference) }
+  var metadata: SnapshotMetadataProtocol { snapshot.metadata }
 
   func data() -> [String: Any]? { snapshot.data() }
   func get(_ field: String) -> Any? { snapshot.get(field) }
