@@ -86,8 +86,8 @@ class QueryWrapper: QueryProtocol {
     }
   }
 
-  func addSnapshotListener(_ listener: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
-    let registration = query.addSnapshotListener { snapshot, error in
+  func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
+    let registration = query.addSnapshotListener(includeMetadataChanges: includeMetadataChanges) { snapshot, error in
       if let snapshot {
         listener(.success(QuerySnapshotWrapper(snapshot: snapshot)))
       } else {

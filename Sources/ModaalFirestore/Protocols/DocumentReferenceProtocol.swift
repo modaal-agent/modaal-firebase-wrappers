@@ -16,5 +16,15 @@ public protocol DocumentReferenceProtocol: AnyObject {
   func updateData(_ fields: [String: Any], completion: @escaping (Result<Void, Error>) -> Void)
   func delete(completion: @escaping (Result<Void, Error>) -> Void)
 
-  func addSnapshotListener(_ listener: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol
+  func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol
+}
+
+public extension DocumentReferenceProtocol {
+  func setData(_ data: [String: Any], completion: @escaping (Result<Void, Error>) -> Void) {
+    setData(data, mergeOption: .overwrite, completion: completion)
+  }
+
+  func addSnapshotListener(_ listener: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
+    addSnapshotListener(includeMetadataChanges: false, listener)
+  }
 }

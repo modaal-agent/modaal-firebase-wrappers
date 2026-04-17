@@ -75,8 +75,8 @@ final class DocumentReferenceWrapper: DocumentReferenceProtocol {
     }
   }
 
-  func addSnapshotListener(_ listener: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
-    let registration = documentRef.addSnapshotListener { snapshot, error in
+  func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
+    let registration = documentRef.addSnapshotListener(includeMetadataChanges: includeMetadataChanges) { snapshot, error in
       if let snapshot {
         listener(.success(DocumentSnapshotWrapper(snapshot: snapshot)))
       } else {

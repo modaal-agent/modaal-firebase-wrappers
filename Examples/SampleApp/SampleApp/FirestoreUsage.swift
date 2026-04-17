@@ -88,7 +88,10 @@ func exerciseDocumentRef(_ ref: DocumentReferenceProtocol) {
 
   ref.getDocument(source: .server) { _ in }
 
-  // Write — all MergeOption variants
+  // Write — default mergeOption (overwrite)
+  ref.setData(["name": "Alice"]) { _ in }
+
+  // Write — explicit MergeOption variants
   ref.setData(["name": "Alice"], mergeOption: .overwrite) { _ in }
   ref.setData(["name": "Alice"], mergeOption: .merge) { _ in }
   ref.setData(["name": "Alice"], mergeOption: .mergeFields(["name"])) { _ in }
@@ -99,7 +102,7 @@ func exerciseDocumentRef(_ ref: DocumentReferenceProtocol) {
   // Delete
   ref.delete { _ in }
 
-  // Snapshot listener
+  // Snapshot listener (default — no metadata changes)
   let listener = ref.addSnapshotListener { result in
     switch result {
     case .success(let snapshot):
@@ -110,6 +113,15 @@ func exerciseDocumentRef(_ ref: DocumentReferenceProtocol) {
     }
   }
   listener.remove()
+
+  // Snapshot listener (with metadata changes)
+  let metaListener = ref.addSnapshotListener(includeMetadataChanges: true) { result in
+    switch result {
+    case .success(let snapshot): _ = snapshot.metadata.isFromCache
+    case .failure: break
+    }
+  }
+  metaListener.remove()
 }
 
 // MARK: - DocumentSnapshotProtocol
@@ -162,7 +174,7 @@ func exerciseQuery(_ query: QueryProtocol) {
   query.getDocuments(source: .cache) { _ in }
   query.getDocuments(source: .server) { _ in }
 
-  // Snapshot listener
+  // Snapshot listener (default — no metadata changes)
   let listener = query.addSnapshotListener { result in
     switch result {
     case .success(let snapshot):
@@ -182,6 +194,15 @@ func exerciseQuery(_ query: QueryProtocol) {
     }
   }
   listener.remove()
+
+  // Snapshot listener (with metadata changes)
+  let metaListener = query.addSnapshotListener(includeMetadataChanges: true) { result in
+    switch result {
+    case .success(let snapshot): _ = snapshot.metadata.isFromCache
+    case .failure: break
+    }
+  }
+  metaListener.remove()
 
   // Aggregation
   let _: AggregateQueryProtocol = query.count

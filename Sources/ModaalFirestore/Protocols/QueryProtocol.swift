@@ -23,7 +23,13 @@ public protocol QueryProtocol: AnyObject {
 
   func getDocuments(completion: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void)
   func getDocuments(source: FirestoreSource, completion: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void)
-  func addSnapshotListener(_ listener: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol
+  func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol
 
   var count: AggregateQueryProtocol { get }
+}
+
+public extension QueryProtocol {
+  func addSnapshotListener(_ listener: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
+    addSnapshotListener(includeMetadataChanges: false, listener)
+  }
 }
