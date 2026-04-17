@@ -23,3 +23,5 @@ targets:
         product: ModaalFirebaseAnalytics
       - package: ModaalFirebase
         product: ModaalFirebaseCrashlytics
+      - package: ModaalFirebase
+        product: ModaalFirebaseAuth
