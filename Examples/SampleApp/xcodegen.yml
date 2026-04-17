@@ -27,3 +27,5 @@ targets:
         product: ModaalFirebaseAuth
       - package: ModaalFirebase
         product: ModaalFirestore
+      - package: ModaalFirebase
+        product: ModaalCloudStorage
