@@ -18,6 +18,11 @@ func exerciseAnalytics(_ analytics: FirebaseAnalyticsProtocol) {
   analytics.resetAnalyticsData()
 }
 
+// MARK: - Combine extensions
+
+// Note: FirebaseAnalyticsProtocol methods are synchronous (void return, no completion
+// handler), so no Combine extensions are needed. Analytics has no async operations.
+
 /// Exercises wrapper instantiation.
 func exerciseAnalyticsWrapperInstantiation() {
   let _: FirebaseAnalyticsWrapper.Type = FirebaseAnalyticsWrapper.self

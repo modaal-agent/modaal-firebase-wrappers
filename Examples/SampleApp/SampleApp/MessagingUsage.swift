@@ -52,6 +52,18 @@ func exerciseMessaging(_ messaging: FirebaseMessagingProtocol) {
   }
 }
 
+// MARK: - Combine extensions
+
+import Combine
+
+/// Exercises Combine API on FirebaseMessagingProtocol.
+func exerciseMessagingCombine(_ messaging: FirebaseMessagingProtocol) {
+  let _: Future<String, Error> = messaging.token()
+  let _: Future<Void, Error> = messaging.deleteToken()
+  let _: Future<Void, Error> = messaging.subscribe(toTopic: "news")
+  let _: Future<Void, Error> = messaging.unsubscribe(fromTopic: "news")
+}
+
 // MARK: - Wrapper instantiation
 
 /// Exercises wrapper construction (proves the concrete type compiles).

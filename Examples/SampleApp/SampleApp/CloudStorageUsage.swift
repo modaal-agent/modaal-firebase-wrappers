@@ -145,6 +145,36 @@ func exerciseFileStoringProtocol(_ store: FileStoring) {
   let _: FileStoring = store.file(path: "documents/report.pdf")
 }
 
+// MARK: - Combine extensions
+
+import Combine
+
+/// Exercises Combine API on CloudFileStoring.
+func exerciseFileStoringCombine(_ file: CloudFileStoring) {
+  // Downloads
+  let _: Future<Data, Error> = file.getData(maxSize: 10 * 1024 * 1024)
+  let _: Future<URL, Error> = file.downloadToFile(localURL: URL(fileURLWithPath: "/tmp/file"))
+  let _: Future<URL, Error> = file.getDownloadURL()
+
+  // Metadata
+  let _: Future<CloudStorageMetadata, Error> = file.getMetadata()
+  let _: Future<CloudStorageMetadata, Error> = file.updateMetadata(CloudStorageMetadata(contentType: "image/jpeg"))
+
+  // Uploads
+  let _: Future<Void, Error> = file.putData(Data())
+  let _: Future<Void, Error> = file.putData(Data(), metadata: CloudStorageMetadata(contentType: "image/png"))
+  let _: Future<Void, Error> = file.uploadFromFile(localURL: URL(fileURLWithPath: "/tmp/file"))
+  let _: Future<Void, Error> = file.uploadFromFile(localURL: URL(fileURLWithPath: "/tmp/file"), metadata: CloudStorageMetadata(contentType: "image/png"))
+
+  // Delete
+  let _: Future<Void, Error> = file.delete()
+}
+
+/// Exercises Combine API on CloudCollectionStoring.
+func exerciseCollectionStoringCombine(_ collection: CloudCollectionStoring) {
+  let _: Future<CloudStorageListResultProtocol, Error> = collection.listAll()
+}
+
 // MARK: - Wrapper instantiation
 
 /// Exercises wrapper construction (proves the concrete type compiles).

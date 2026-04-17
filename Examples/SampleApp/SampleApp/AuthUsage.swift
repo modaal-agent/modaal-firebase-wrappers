@@ -167,6 +167,47 @@ func exerciseUserMetadata(_ metadata: FirebaseUserMetadataProtocol) {
   _ = metadata.creationDate
 }
 
+// MARK: - Combine extensions
+
+import Combine
+
+/// Exercises Combine API on FirebaseAuthProtocol.
+func exerciseAuthCombine(_ auth: FirebaseAuthProtocol) {
+  var cancellables = Set<AnyCancellable>()
+
+  // One-shot
+  let _: Future<FirebaseAuthDataResultProtocol, Error> = auth.signInAnonymously()
+  let _: Future<FirebaseAuthDataResultProtocol, Error> = auth.signIn(withEmail: "a@b.com", password: "pw")
+  let _: Future<FirebaseAuthDataResultProtocol, Error> = auth.createUser(withEmail: "a@b.com", password: "pw")
+  let _: Future<Void, Error> = auth.sendPasswordReset(withEmail: "a@b.com")
+  let _: Future<Void, Error> = auth.revokeToken(withAuthorizationCode: "code")
+
+  // Streaming
+  auth.authStateDidChangePublisher()
+    .sink { user in _ = user?.uid }
+    .store(in: &cancellables)
+}
+
+/// Exercises Combine API on FirebaseUserProtocol.
+func exerciseUserCombine(_ user: FirebaseUserProtocol) {
+  let _: Future<Void, Error> = user.sendEmailVerification()
+  let _: Future<Void, Error> = user.updateUserProfile(displayName: "Name", photoURL: nil)
+  let _: Future<Void, Error> = user.updatePassword(to: "pw")
+  let _: Future<Void, Error> = user.reload()
+  let _: Future<String, Error> = user.getIDToken()
+  let _: Future<FirebaseAuthTokenResultProtocol, Error> = user.getIDTokenResult()
+}
+
+/// Exercises Combine API for credential operations.
+func exerciseAuthCredentialCombine(_ credential: FirebaseAuthCredentialProtocol,
+                                    auth: FirebaseAuthProtocol,
+                                    user: FirebaseUserProtocol) {
+  let _: Future<FirebaseAuthDataResultProtocol, Error> = auth.signIn(with: credential)
+  let _: Future<FirebaseAuthDataResultProtocol, Error> = user.link(with: credential)
+  let _: Future<FirebaseUserProtocol, Error> = user.unlink(fromProvider: "google.com")
+  let _: Future<FirebaseAuthDataResultProtocol, Error> = user.reauthenticate(with: credential)
+}
+
 // MARK: - Wrapper instantiation
 
 /// Exercises wrapper construction (proves the concrete type compiles).

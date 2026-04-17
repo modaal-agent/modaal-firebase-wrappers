@@ -372,6 +372,73 @@ func exerciseDocumentChangeType() {
   _ = types
 }
 
+// MARK: - Combine extensions
+
+import Combine
+
+/// Exercises Combine API on FirestoreProtocol.
+func exerciseFirestoreCombine(_ db: FirestoreProtocol) {
+  let _: Future<Any?, Error> = db.runTransaction { transaction in
+    return nil
+  }
+}
+
+/// Exercises Combine API on DocumentReferenceProtocol.
+func exerciseDocumentRefCombine(_ ref: DocumentReferenceProtocol) {
+  var cancellables = Set<AnyCancellable>()
+
+  // One-shot
+  let _: Future<DocumentSnapshotProtocol, Error> = ref.getDocument()
+  let _: Future<DocumentSnapshotProtocol, Error> = ref.getDocument(source: .cache)
+  let _: Future<Void, Error> = ref.setData(["name": "Alice"])
+  let _: Future<Void, Error> = ref.setData(["name": "Alice"], mergeOption: .merge)
+  let _: Future<Void, Error> = ref.updateData(["name": "Bob"])
+  let _: Future<Void, Error> = ref.delete()
+
+  // Streaming
+  ref.snapshotPublisher()
+    .sink(receiveCompletion: { _ in }, receiveValue: { snapshot in _ = snapshot.exists })
+    .store(in: &cancellables)
+
+  ref.snapshotPublisher(includeMetadataChanges: true)
+    .sink(receiveCompletion: { _ in }, receiveValue: { snapshot in _ = snapshot.metadata.isFromCache })
+    .store(in: &cancellables)
+}
+
+/// Exercises Combine API on QueryProtocol.
+func exerciseQueryCombine(_ query: QueryProtocol) {
+  var cancellables = Set<AnyCancellable>()
+
+  // One-shot
+  let _: Future<QuerySnapshotProtocol, Error> = query.getDocuments()
+  let _: Future<QuerySnapshotProtocol, Error> = query.getDocuments(source: .server)
+
+  // Streaming
+  query.snapshotPublisher()
+    .sink(receiveCompletion: { _ in }, receiveValue: { snapshot in _ = snapshot.count })
+    .store(in: &cancellables)
+
+  query.snapshotPublisher(includeMetadataChanges: true)
+    .sink(receiveCompletion: { _ in }, receiveValue: { snapshot in _ = snapshot.metadata.isFromCache })
+    .store(in: &cancellables)
+}
+
+/// Exercises Combine API on CollectionReferenceProtocol.
+func exerciseCollectionRefCombine(_ ref: CollectionReferenceProtocol) {
+  let _: Future<DocumentReferenceProtocol, Error> = ref.addDocument(data: ["name": "Alice"])
+}
+
+/// Exercises Combine API on WriteBatchProtocol.
+func exerciseWriteBatchCombine(_ batch: WriteBatchProtocol) {
+  let _: Future<Void, Error> = batch.commit()
+}
+
+/// Exercises Combine API on AggregateQueryProtocol.
+func exerciseAggregateQueryCombine(_ query: AggregateQueryProtocol) {
+  let _: Future<Int, Error> = query.getAggregation()
+  let _: Future<Int, Error> = query.getAggregation(source: .server)
+}
+
 // MARK: - Wrapper instantiation
 
 /// Exercises wrapper construction (proves the concrete type compiles).

@@ -97,6 +97,25 @@ func exerciseRemoteConfigEnums() {
   _ = sources
 }
 
+// MARK: - Combine extensions
+
+import Combine
+
+/// Exercises Combine API on FirebaseRemoteConfigProtocol.
+func exerciseRemoteConfigCombine(_ config: FirebaseRemoteConfigProtocol) {
+  var cancellables = Set<AnyCancellable>()
+
+  // One-shot
+  let _: Future<ModaalRemoteConfigFetchStatus, Error> = config.fetch()
+  let _: Future<ModaalRemoteConfigFetchAndActivateStatus, Error> = config.fetchAndActivate()
+  let _: Future<Bool, Error> = config.activate()
+
+  // Streaming
+  config.configUpdatePublisher()
+    .sink(receiveCompletion: { _ in }, receiveValue: { update in _ = update.updatedKeys })
+    .store(in: &cancellables)
+}
+
 // MARK: - Wrapper instantiation
 
 /// Exercises wrapper construction (proves the concrete type compiles).
