@@ -29,3 +29,5 @@ targets:
         product: ModaalFirestore
       - package: ModaalFirebase
         product: ModaalCloudStorage
+      - package: ModaalFirebase
+        product: ModaalFirebaseMessaging
