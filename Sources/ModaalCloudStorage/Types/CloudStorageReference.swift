@@ -1,7 +1,6 @@
 // Copyright (c) 2026 Modaal.dev
 // Licensed under the MIT License. See LICENSE file for details.
 
-import Combine
 import FirebaseStorage
 import Foundation
 
@@ -38,161 +37,90 @@ public final class CloudStorageReference: CloudStorageReferencing {
 
   // MARK: - CloudCollectionStoring
 
-  public func listAll() -> AnyPublisher<CloudStorageListResultProtocol, Error> {
-    Future { promise in
-      self.reference.listAll { result in
-        promise(result.map { CloudStorageListResult(result: $0) })
-      }
+  public func listAll(completion: @escaping (Result<CloudStorageListResultProtocol, Error>) -> Void) {
+    reference.listAll { result in
+      completion(result.map { CloudStorageListResult(result: $0) })
     }
-    .eraseToAnyPublisher()
   }
 
   // MARK: - Metadata
 
-  public func getMetadata() -> AnyPublisher<CloudStorageMetadata, Error> {
-    Future { promise in
-      self.reference.getMetadata { metadata, error in
-        if let metadata {
-          promise(.success(CloudStorageMetadata.from(metadata)))
-        } else {
-          promise(.failure(error ?? NSError(domain: "Unknown error", code: -1)))
-        }
+  public func getMetadata(completion: @escaping (Result<CloudStorageMetadata, Error>) -> Void) {
+    reference.getMetadata { metadata, error in
+      if let metadata {
+        completion(.success(CloudStorageMetadata.from(metadata)))
+      } else {
+        completion(.failure(error ?? NSError(domain: "Unknown error", code: -1)))
       }
     }
-    .eraseToAnyPublisher()
   }
 
-  public func updateMetadata(_ metadata: CloudStorageMetadata) -> AnyPublisher<CloudStorageMetadata, Error> {
-    Future { promise in
-      self.reference.updateMetadata(metadata.toStorageMetadata()) { updated, error in
-        if let updated {
-          promise(.success(CloudStorageMetadata.from(updated)))
-        } else {
-          promise(.failure(error ?? NSError(domain: "Unknown error", code: -1)))
-        }
+  public func updateMetadata(_ metadata: CloudStorageMetadata, completion: @escaping (Result<CloudStorageMetadata, Error>) -> Void) {
+    reference.updateMetadata(metadata.toStorageMetadata()) { updated, error in
+      if let updated {
+        completion(.success(CloudStorageMetadata.from(updated)))
+      } else {
+        completion(.failure(error ?? NSError(domain: "Unknown error", code: -1)))
       }
     }
-    .eraseToAnyPublisher()
   }
 
-  // MARK: - CloudFileStoring
+  // MARK: - CloudFileStoring (downloads)
 
-  public func getData(maxSize: Int64) -> AnyPublisher<Data, Error> {
-    var task: StorageDownloadTask?
-
-    return Deferred {
-      Future { promise in
-        task = self.reference.getData(maxSize: maxSize) { result in
-          promise(result)
-        }
-      }
+  public func getData(maxSize: Int64, completion: @escaping (Result<Data, Error>) -> Void) {
+    reference.getData(maxSize: maxSize) { result in
+      completion(result)
     }
-    .handleEvents(receiveCancel: {
-      task?.cancel()
-    })
-    .eraseToAnyPublisher()
   }
 
-  public func downloadToFile(localURL: URL) -> AnyPublisher<URL, Error> {
-    var task: StorageDownloadTask?
-
-    return Deferred {
-      Future { promise in
-        task = self.reference.write(toFile: localURL) { result in
-          promise(result)
-        }
-      }
+  public func downloadToFile(localURL: URL, completion: @escaping (Result<URL, Error>) -> Void) {
+    reference.write(toFile: localURL) { result in
+      completion(result)
     }
-    .handleEvents(receiveCancel: {
-      task?.cancel()
-    })
-    .eraseToAnyPublisher()
   }
 
-  public func getDownloadURL() -> AnyPublisher<URL, Error> {
-    Future { promise in
-      self.reference.downloadURL { result in
-        promise(result)
-      }
+  public func getDownloadURL(completion: @escaping (Result<URL, Error>) -> Void) {
+    reference.downloadURL { result in
+      completion(result)
     }
-    .eraseToAnyPublisher()
   }
 
-  public func putData(_ data: Data) -> AnyPublisher<Void, Error> {
-    var task: StorageUploadTask?
+  // MARK: - CloudFileStoring (uploads)
 
-    return Deferred {
-      Future { promise in
-        task = self.reference.putData(data) { result in
-          promise(result.map { _ in () })
-        }
-      }
+  public func putData(_ data: Data, completion: @escaping (Result<Void, Error>) -> Void) {
+    reference.putData(data) { result in
+      completion(result.map { _ in () })
     }
-    .handleEvents(receiveCancel: {
-      task?.cancel()
-    })
-    .eraseToAnyPublisher()
   }
 
-  public func putData(_ data: Data, metadata: CloudStorageMetadata) -> AnyPublisher<Void, Error> {
-    var task: StorageUploadTask?
-
-    return Deferred {
-      Future { promise in
-        task = self.reference.putData(data, metadata: metadata.toStorageMetadata()) { result in
-          promise(result.map { _ in () })
-        }
-      }
+  public func putData(_ data: Data, metadata: CloudStorageMetadata, completion: @escaping (Result<Void, Error>) -> Void) {
+    reference.putData(data, metadata: metadata.toStorageMetadata()) { result in
+      completion(result.map { _ in () })
     }
-    .handleEvents(receiveCancel: {
-      task?.cancel()
-    })
-    .eraseToAnyPublisher()
   }
 
-  public func uploadFromFile(localURL: URL) -> AnyPublisher<Void, Error> {
-    var task: StorageUploadTask?
-
-    return Deferred {
-      Future { promise in
-        task = self.reference.putFile(from: localURL) { result in
-          promise(result.map { _ in () })
-        }
-      }
+  public func uploadFromFile(localURL: URL, completion: @escaping (Result<Void, Error>) -> Void) {
+    reference.putFile(from: localURL) { result in
+      completion(result.map { _ in () })
     }
-    .handleEvents(receiveCancel: {
-      task?.cancel()
-    })
-    .eraseToAnyPublisher()
   }
 
-  public func uploadFromFile(localURL: URL, metadata: CloudStorageMetadata) -> AnyPublisher<Void, Error> {
-    var task: StorageUploadTask?
-
-    return Deferred {
-      Future { promise in
-        task = self.reference.putFile(from: localURL, metadata: metadata.toStorageMetadata()) { result in
-          promise(result.map { _ in () })
-        }
-      }
+  public func uploadFromFile(localURL: URL, metadata: CloudStorageMetadata, completion: @escaping (Result<Void, Error>) -> Void) {
+    reference.putFile(from: localURL, metadata: metadata.toStorageMetadata()) { result in
+      completion(result.map { _ in () })
     }
-    .handleEvents(receiveCancel: {
-      task?.cancel()
-    })
-    .eraseToAnyPublisher()
   }
 
-  public func delete() -> AnyPublisher<Void, Error> {
-    Future { promise in
-      self.reference.delete { error in
-        if let error {
-          promise(.failure(error))
-        } else {
-          promise(.success(()))
-        }
+  // MARK: - CloudFileStoring (delete)
+
+  public func delete(completion: @escaping (Result<Void, Error>) -> Void) {
+    reference.delete { error in
+      if let error {
+        completion(.failure(error))
+      } else {
+        completion(.success(()))
       }
     }
-    .eraseToAnyPublisher()
   }
 }
 

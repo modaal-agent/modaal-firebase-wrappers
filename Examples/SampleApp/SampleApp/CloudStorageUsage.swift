@@ -1,7 +1,6 @@
 // Copyright (c) 2026 Modaal.dev
 // Licensed under the MIT License. See LICENSE file for details.
 
-import Combine
 import Foundation
 import ModaalCloudStorage
 
@@ -47,34 +46,69 @@ func exerciseStorageRef(_ ref: CloudStorageReferencing) {
 /// Exercises every method on CloudFileStoring.
 func exerciseFileStoring(_ file: CloudFileStoring) {
   // Downloads
-  let _: AnyPublisher<Data, Error> = file.getData(maxSize: 10 * 1024 * 1024)
-  let _: AnyPublisher<URL, Error> = file.downloadToFile(localURL: URL(fileURLWithPath: "/tmp/file"))
-  let _: AnyPublisher<URL, Error> = file.getDownloadURL()
+  file.getData(maxSize: 10 * 1024 * 1024) { result in
+    switch result {
+    case .success(let data): _ = data.count
+    case .failure: break
+    }
+  }
+
+  file.downloadToFile(localURL: URL(fileURLWithPath: "/tmp/file")) { result in
+    switch result {
+    case .success(let url): _ = url.path
+    case .failure: break
+    }
+  }
+
+  file.getDownloadURL { result in
+    switch result {
+    case .success(let url): _ = url.absoluteString
+    case .failure: break
+    }
+  }
 
   // Metadata
-  let _: AnyPublisher<CloudStorageMetadata, Error> = file.getMetadata()
-  let _: AnyPublisher<CloudStorageMetadata, Error> = file.updateMetadata(
-    CloudStorageMetadata(contentType: "image/jpeg")
-  )
+  file.getMetadata { result in
+    switch result {
+    case .success(let metadata):
+      _ = metadata.contentType
+      _ = metadata.size
+    case .failure: break
+    }
+  }
+
+  file.updateMetadata(CloudStorageMetadata(contentType: "image/jpeg")) { result in
+    switch result {
+    case .success(let updated): _ = updated.contentType
+    case .failure: break
+    }
+  }
 
   // Uploads (without metadata)
-  let _: AnyPublisher<Void, Error> = file.putData(Data())
-  let _: AnyPublisher<Void, Error> = file.uploadFromFile(localURL: URL(fileURLWithPath: "/tmp/file"))
+  file.putData(Data()) { _ in }
+  file.uploadFromFile(localURL: URL(fileURLWithPath: "/tmp/file")) { _ in }
 
   // Uploads (with metadata)
   let meta = CloudStorageMetadata(contentType: "image/png", customMetadata: ["source": "camera"])
-  let _: AnyPublisher<Void, Error> = file.putData(Data(), metadata: meta)
-  let _: AnyPublisher<Void, Error> = file.uploadFromFile(localURL: URL(fileURLWithPath: "/tmp/file"), metadata: meta)
+  file.putData(Data(), metadata: meta) { _ in }
+  file.uploadFromFile(localURL: URL(fileURLWithPath: "/tmp/file"), metadata: meta) { _ in }
 
   // Delete
-  let _: AnyPublisher<Void, Error> = file.delete()
+  file.delete { _ in }
 }
 
 // MARK: - CloudCollectionStoring
 
 /// Exercises every method on CloudCollectionStoring.
 func exerciseCollectionStoring(_ collection: CloudCollectionStoring) {
-  let _: AnyPublisher<CloudStorageListResultProtocol, Error> = collection.listAll()
+  collection.listAll { result in
+    switch result {
+    case .success(let listResult):
+      _ = listResult.prefixes()
+      _ = listResult.items()
+    case .failure: break
+    }
+  }
 }
 
 // MARK: - CloudStorageListResultProtocol

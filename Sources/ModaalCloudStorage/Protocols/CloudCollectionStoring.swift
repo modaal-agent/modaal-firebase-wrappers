@@ -1,7 +1,7 @@
 // Copyright (c) 2026 Modaal.dev
 // Licensed under the MIT License. See LICENSE file for details.
 
-import Combine
+import Foundation
 
 public protocol CloudStorageListResultProtocol {
   func prefixes() -> [CloudStorageReferencing]
@@ -9,5 +9,5 @@ public protocol CloudStorageListResultProtocol {
 }
 
 public protocol CloudCollectionStoring {
-  func listAll() -> AnyPublisher<CloudStorageListResultProtocol, Error>
+  func listAll(completion: @escaping (Result<CloudStorageListResultProtocol, Error>) -> Void)
 }
