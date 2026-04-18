@@ -1,5 +1,7 @@
 # ModaalFirebase
 
+[![CI](https://github.com/modaal-agent/modaal-firebase-wrappers/actions/workflows/ci.yml/badge.svg)](https://github.com/modaal-agent/modaal-firebase-wrappers/actions/workflows/ci.yml)
+
 Swift protocol wrappers for the Firebase iOS SDK. Inject the protocol, mock the protocol, test the logic — without network calls, without `GoogleService-Info.plist`, without Firebase initialization.
 
 ## Why
