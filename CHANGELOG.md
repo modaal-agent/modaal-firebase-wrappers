@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.1.0] — 2026-04-19
+
+### Added
+- **`ModaalFirebaseMocks` SPM product** — 32 pre-generated Sourcery mock classes for all protocols. Zero consumer tooling overhead: `import ModaalFirebaseMocks`, use `FirestoreProtocolMock()`, done.
+- **CI pipeline** — GitHub Actions running `build.sh` on Xcode 26.3 with mock freshness validation. README badge.
+- **45 tests across 3 targets:**
+  - `ModaalFirestoreCombineTests` (17) — Future forwarding, streaming publisher lifecycle, error propagation, cancel cleanup
+  - `ModaalFirebaseAuthCombineTests` (6) — sign-in flows, auth state change publisher
+  - `ModaalFirestoreTypeMappingTests` (22) — Filter/FieldPath/Source/AggregateSource conversions
+- **Version support policy** in README
+
+### Changed
+- Xcode requirement clarified to 26.0+ (akaffenberger xcframeworks require Xcode 26.x; was listed as 16+ but never functional)
+- Mock generation uses [swift-sourcery-templates](https://github.com/ivanmisuno/swift-sourcery-templates)@`0.2.13` with `@escaping` attribute preservation fix
+
 ## [1.0.0] — 2026-04-17
 
 First stable release. 8 Firebase services wrapped behind Swift protocols with full Combine extension layer, escape hatches, and comprehensive documentation.
@@ -17,7 +32,7 @@ First stable release. 8 Firebase services wrapped behind Swift protocols with fu
 
 ### Highlights
 
-- **31 protocols** wrapping the Firebase iOS SDK 12.x surface
+- **32 protocols** wrapping the Firebase iOS SDK 12.x surface
 - **~170 completion-handler methods** across all modules
 - **39 `Future<T, Error>` Combine extensions** for one-shot operations
 - **4 streaming publishers** (auth state, document snapshots, query snapshots, config updates)

@@ -133,6 +133,14 @@ wrapper.firestore.settings.isPersistenceEnabled = false  // escape hatch
 
 > **Note:** This library depends on [firebase-ios-sdk-xcframeworks](https://github.com/akaffenberger/firebase-ios-sdk-xcframeworks) (pre-built binaries) for faster build times. These binaries are built with Xcode 26.x and cannot be linked with Xcode 16.x. The Firebase source SDK supports Xcode 16+, but switching to it requires forking this library (see [wrapper plan §3.4](https://github.com/modaal-agent/modaal-agent/blob/main/specs/066-integrations-firebase/firebase-shared-wrapper-plan.md)).
 
+## Version Support
+
+**Supported Firebase SDK versions:** 12.x (12.12.0+)
+
+**Version tracking policy:** ModaalFirebase tracks the latest Firebase major version. When Firebase ships a new major version (e.g., 13.0), we release a corresponding major version of ModaalFirebase within 4 weeks. The previous Firebase major version receives critical bug fixes on a maintenance branch for 6 months after the new major version ships.
+
+**Minor/patch versions:** `Package.swift` uses `.upToNextMajor(from: "12.12.0")` for the Firebase SDK dependency. Consumers are free to resolve to any Firebase 12.x version within that range.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
