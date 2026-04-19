@@ -24,36 +24,36 @@ class FirebaseMessagingProtocolMock: FirebaseMessagingProtocol {
     var isAutoInitEnabledSetCount: Int = 0
 
     // MARK: - Methods
-    func deleteToken(completion: (Result<Void, Error>) -> Void) {
+    func deleteToken(completion: @escaping (Result<Void, Error>) -> Void) {
         deleteTokenCallCount += 1
         if let __deleteTokenHandler = self.deleteTokenHandler {
             __deleteTokenHandler(completion)
         }
     }
     var deleteTokenCallCount: Int = 0
-    var deleteTokenHandler: ((_ completion: (Result<Void, Error>) -> Void) -> ())? = nil
-    func subscribe(toTopic topic: String, completion: (Result<Void, Error>) -> Void) {
+    var deleteTokenHandler: ((_ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func subscribe(toTopic topic: String, completion: @escaping (Result<Void, Error>) -> Void) {
         subscribeCallCount += 1
         if let __subscribeHandler = self.subscribeHandler {
             __subscribeHandler(topic, completion)
         }
     }
     var subscribeCallCount: Int = 0
-    var subscribeHandler: ((_ topic: String, _ completion: (Result<Void, Error>) -> Void) -> ())? = nil
-    func token(completion: (Result<String, Error>) -> Void) {
+    var subscribeHandler: ((_ topic: String, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func token(completion: @escaping (Result<String, Error>) -> Void) {
         tokenCallCount += 1
         if let __tokenHandler = self.tokenHandler {
             __tokenHandler(completion)
         }
     }
     var tokenCallCount: Int = 0
-    var tokenHandler: ((_ completion: (Result<String, Error>) -> Void) -> ())? = nil
-    func unsubscribe(fromTopic topic: String, completion: (Result<Void, Error>) -> Void) {
+    var tokenHandler: ((_ completion: @escaping (Result<String, Error>) -> Void) -> ())? = nil
+    func unsubscribe(fromTopic topic: String, completion: @escaping (Result<Void, Error>) -> Void) {
         unsubscribeCallCount += 1
         if let __unsubscribeHandler = self.unsubscribeHandler {
             __unsubscribeHandler(topic, completion)
         }
     }
     var unsubscribeCallCount: Int = 0
-    var unsubscribeHandler: ((_ topic: String, _ completion: (Result<Void, Error>) -> Void) -> ())? = nil
+    var unsubscribeHandler: ((_ topic: String, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
 }

@@ -125,5 +125,23 @@ let package = Package(
         "ModaalFirebaseRemoteConfig",
       ]
     ),
+
+    // MARK: - Tests
+
+    .testTarget(
+      name: "ModaalFirestoreCombineTests",
+      dependencies: ["ModaalFirestore", "ModaalFirebaseMocks"]
+    ),
+    .testTarget(
+      name: "ModaalFirebaseAuthCombineTests",
+      dependencies: ["ModaalFirebaseAuth", "ModaalFirebaseMocks"]
+    ),
+    .testTarget(
+      name: "ModaalFirestoreTypeMappingTests",
+      dependencies: [
+        "ModaalFirestore",
+        .product(name: "FirebaseFirestore", package: firebaseSDK),
+      ]
+    ),
   ]
 )

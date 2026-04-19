@@ -9,14 +9,14 @@ import Foundation
 class AggregateQueryProtocolMock: AggregateQueryProtocol {
 
     // MARK: - Methods
-    func getAggregation(source: FirestoreAggregateSource, completion: (Result<Int, Error>) -> Void) {
+    func getAggregation(source: FirestoreAggregateSource, completion: @escaping (Result<Int, Error>) -> Void) {
         getAggregationCallCount += 1
         if let __getAggregationHandler = self.getAggregationHandler {
             __getAggregationHandler(source, completion)
         }
     }
     var getAggregationCallCount: Int = 0
-    var getAggregationHandler: ((_ source: FirestoreAggregateSource, _ completion: (Result<Int, Error>) -> Void) -> ())? = nil
+    var getAggregationHandler: ((_ source: FirestoreAggregateSource, _ completion: @escaping (Result<Int, Error>) -> Void) -> ())? = nil
 }
 
 // MARK: - CollectionReferenceProtocol
@@ -34,15 +34,15 @@ class CollectionReferenceProtocolMock: CollectionReferenceProtocol {
     }
 
     // MARK: - Methods
-    func addDocument(data: [String: Any], completion: (Result<DocumentReferenceProtocol, Error>) -> Void) {
+    func addDocument(data: [String: Any], completion: @escaping (Result<DocumentReferenceProtocol, Error>) -> Void) {
         addDocumentCallCount += 1
         if let __addDocumentHandler = self.addDocumentHandler {
             __addDocumentHandler(data, completion)
         }
     }
     var addDocumentCallCount: Int = 0
-    var addDocumentHandler: ((_ data: [String: Any], _ completion: (Result<DocumentReferenceProtocol, Error>) -> Void) -> ())? = nil
-    func addSnapshotListener(includeMetadataChanges: Bool, _ listener: (Result<QuerySnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
+    var addDocumentHandler: ((_ data: [String: Any], _ completion: @escaping (Result<DocumentReferenceProtocol, Error>) -> Void) -> ())? = nil
+    func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
         addSnapshotListenerCallCount += 1
         if let __addSnapshotListenerHandler = self.addSnapshotListenerHandler {
             return __addSnapshotListenerHandler(includeMetadataChanges, listener)
@@ -50,7 +50,7 @@ class CollectionReferenceProtocolMock: CollectionReferenceProtocol {
         fatalError("addSnapshotListenerHandler expected to be set.")
     }
     var addSnapshotListenerCallCount: Int = 0
-    var addSnapshotListenerHandler: ((_ includeMetadataChanges: Bool, _ listener: (Result<QuerySnapshotProtocol, Error>) -> Void) -> (ListenerRegistrationProtocol))? = nil
+    var addSnapshotListenerHandler: ((_ includeMetadataChanges: Bool, _ listener: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> (ListenerRegistrationProtocol))? = nil
     func document() -> DocumentReferenceProtocol {
         documentCallCount += 1
         if let __documentHandler = self.documentHandler {
@@ -105,22 +105,22 @@ class CollectionReferenceProtocolMock: CollectionReferenceProtocol {
     }
     var endBeforeFieldValuesCallCount: Int = 0
     var endBeforeFieldValuesHandler: ((_ fieldValues: [Any]) -> (QueryProtocol))? = nil
-    func getDocuments(completion: (Result<QuerySnapshotProtocol, Error>) -> Void) {
+    func getDocuments(completion: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) {
         getDocumentsCallCount += 1
         if let __getDocumentsHandler = self.getDocumentsHandler {
             __getDocumentsHandler(completion)
         }
     }
     var getDocumentsCallCount: Int = 0
-    var getDocumentsHandler: ((_ completion: (Result<QuerySnapshotProtocol, Error>) -> Void) -> ())? = nil
-    func getDocuments(source: FirestoreSource, completion: (Result<QuerySnapshotProtocol, Error>) -> Void) {
+    var getDocumentsHandler: ((_ completion: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> ())? = nil
+    func getDocuments(source: FirestoreSource, completion: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) {
         getDocumentsSourceCompletionCallCount += 1
         if let __getDocumentsSourceCompletionHandler = self.getDocumentsSourceCompletionHandler {
             __getDocumentsSourceCompletionHandler(source, completion)
         }
     }
     var getDocumentsSourceCompletionCallCount: Int = 0
-    var getDocumentsSourceCompletionHandler: ((_ source: FirestoreSource, _ completion: (Result<QuerySnapshotProtocol, Error>) -> Void) -> ())? = nil
+    var getDocumentsSourceCompletionHandler: ((_ source: FirestoreSource, _ completion: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> ())? = nil
     func limit(toLast value: Int) -> QueryProtocol {
         limitToLastValueCallCount += 1
         if let __limitToLastValueHandler = self.limitToLastValueHandler {
@@ -225,7 +225,7 @@ class DocumentReferenceProtocolMock: DocumentReferenceProtocol {
     }
 
     // MARK: - Methods
-    func addSnapshotListener(includeMetadataChanges: Bool, _ listener: (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
+    func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
         addSnapshotListenerCallCount += 1
         if let __addSnapshotListenerHandler = self.addSnapshotListenerHandler {
             return __addSnapshotListenerHandler(includeMetadataChanges, listener)
@@ -233,7 +233,7 @@ class DocumentReferenceProtocolMock: DocumentReferenceProtocol {
         fatalError("addSnapshotListenerHandler expected to be set.")
     }
     var addSnapshotListenerCallCount: Int = 0
-    var addSnapshotListenerHandler: ((_ includeMetadataChanges: Bool, _ listener: (Result<DocumentSnapshotProtocol, Error>) -> Void) -> (ListenerRegistrationProtocol))? = nil
+    var addSnapshotListenerHandler: ((_ includeMetadataChanges: Bool, _ listener: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) -> (ListenerRegistrationProtocol))? = nil
     func collection(_ path: String) -> CollectionReferenceProtocol {
         collectionCallCount += 1
         if let __collectionHandler = self.collectionHandler {
@@ -243,46 +243,46 @@ class DocumentReferenceProtocolMock: DocumentReferenceProtocol {
     }
     var collectionCallCount: Int = 0
     var collectionHandler: ((_ path: String) -> (CollectionReferenceProtocol))? = nil
-    func delete(completion: (Result<Void, Error>) -> Void) {
+    func delete(completion: @escaping (Result<Void, Error>) -> Void) {
         deleteCallCount += 1
         if let __deleteHandler = self.deleteHandler {
             __deleteHandler(completion)
         }
     }
     var deleteCallCount: Int = 0
-    var deleteHandler: ((_ completion: (Result<Void, Error>) -> Void) -> ())? = nil
-    func getDocument(completion: (Result<DocumentSnapshotProtocol, Error>) -> Void) {
+    var deleteHandler: ((_ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func getDocument(completion: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) {
         getDocumentCallCount += 1
         if let __getDocumentHandler = self.getDocumentHandler {
             __getDocumentHandler(completion)
         }
     }
     var getDocumentCallCount: Int = 0
-    var getDocumentHandler: ((_ completion: (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ())? = nil
-    func getDocument(source: FirestoreSource, completion: (Result<DocumentSnapshotProtocol, Error>) -> Void) {
+    var getDocumentHandler: ((_ completion: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ())? = nil
+    func getDocument(source: FirestoreSource, completion: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) {
         getDocumentSourceCompletionCallCount += 1
         if let __getDocumentSourceCompletionHandler = self.getDocumentSourceCompletionHandler {
             __getDocumentSourceCompletionHandler(source, completion)
         }
     }
     var getDocumentSourceCompletionCallCount: Int = 0
-    var getDocumentSourceCompletionHandler: ((_ source: FirestoreSource, _ completion: (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ())? = nil
-    func setData(_ data: [String: Any], mergeOption: MergeOption, completion: (Result<Void, Error>) -> Void) {
+    var getDocumentSourceCompletionHandler: ((_ source: FirestoreSource, _ completion: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ())? = nil
+    func setData(_ data: [String: Any], mergeOption: MergeOption, completion: @escaping (Result<Void, Error>) -> Void) {
         setDataCallCount += 1
         if let __setDataHandler = self.setDataHandler {
             __setDataHandler(data, mergeOption, completion)
         }
     }
     var setDataCallCount: Int = 0
-    var setDataHandler: ((_ data: [String: Any], _ mergeOption: MergeOption, _ completion: (Result<Void, Error>) -> Void) -> ())? = nil
-    func updateData(_ fields: [String: Any], completion: (Result<Void, Error>) -> Void) {
+    var setDataHandler: ((_ data: [String: Any], _ mergeOption: MergeOption, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func updateData(_ fields: [String: Any], completion: @escaping (Result<Void, Error>) -> Void) {
         updateDataCallCount += 1
         if let __updateDataHandler = self.updateDataHandler {
             __updateDataHandler(fields, completion)
         }
     }
     var updateDataCallCount: Int = 0
-    var updateDataHandler: ((_ fields: [String: Any], _ completion: (Result<Void, Error>) -> Void) -> ())? = nil
+    var updateDataHandler: ((_ fields: [String: Any], _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
 }
 
 // MARK: - DocumentSnapshotProtocol
@@ -361,14 +361,14 @@ class FirestoreProtocolMock: FirestoreProtocol {
     }
     var documentCallCount: Int = 0
     var documentHandler: ((_ documentPath: String) -> (DocumentReferenceProtocol))? = nil
-    func runTransaction(_ updateBlock: (TransactionProtocol) throws -> Any?, completion: (Result<Any?, Error>) -> Void) {
+    func runTransaction(_ updateBlock: @escaping (TransactionProtocol) throws -> Any?, completion: @escaping (Result<Any?, Error>) -> Void) {
         runTransactionCallCount += 1
         if let __runTransactionHandler = self.runTransactionHandler {
             __runTransactionHandler(updateBlock, completion)
         }
     }
     var runTransactionCallCount: Int = 0
-    var runTransactionHandler: ((_ updateBlock: (TransactionProtocol) throws -> Any?, _ completion: (Result<Any?, Error>) -> Void) -> ())? = nil
+    var runTransactionHandler: ((_ updateBlock: @escaping (TransactionProtocol) throws -> Any?, _ completion: @escaping (Result<Any?, Error>) -> Void) -> ())? = nil
 }
 
 // MARK: - ListenerRegistrationProtocol
@@ -397,7 +397,7 @@ class QueryProtocolMock: QueryProtocol {
     }
 
     // MARK: - Methods
-    func addSnapshotListener(includeMetadataChanges: Bool, _ listener: (Result<QuerySnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
+    func addSnapshotListener(includeMetadataChanges: Bool, _ listener: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
         addSnapshotListenerCallCount += 1
         if let __addSnapshotListenerHandler = self.addSnapshotListenerHandler {
             return __addSnapshotListenerHandler(includeMetadataChanges, listener)
@@ -405,7 +405,7 @@ class QueryProtocolMock: QueryProtocol {
         fatalError("addSnapshotListenerHandler expected to be set.")
     }
     var addSnapshotListenerCallCount: Int = 0
-    var addSnapshotListenerHandler: ((_ includeMetadataChanges: Bool, _ listener: (Result<QuerySnapshotProtocol, Error>) -> Void) -> (ListenerRegistrationProtocol))? = nil
+    var addSnapshotListenerHandler: ((_ includeMetadataChanges: Bool, _ listener: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> (ListenerRegistrationProtocol))? = nil
     func end(atDocument document: DocumentSnapshotProtocol) -> QueryProtocol {
         endAtDocumentDocumentCallCount += 1
         if let __endAtDocumentDocumentHandler = self.endAtDocumentDocumentHandler {
@@ -442,22 +442,22 @@ class QueryProtocolMock: QueryProtocol {
     }
     var endBeforeFieldValuesCallCount: Int = 0
     var endBeforeFieldValuesHandler: ((_ fieldValues: [Any]) -> (QueryProtocol))? = nil
-    func getDocuments(completion: (Result<QuerySnapshotProtocol, Error>) -> Void) {
+    func getDocuments(completion: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) {
         getDocumentsCallCount += 1
         if let __getDocumentsHandler = self.getDocumentsHandler {
             __getDocumentsHandler(completion)
         }
     }
     var getDocumentsCallCount: Int = 0
-    var getDocumentsHandler: ((_ completion: (Result<QuerySnapshotProtocol, Error>) -> Void) -> ())? = nil
-    func getDocuments(source: FirestoreSource, completion: (Result<QuerySnapshotProtocol, Error>) -> Void) {
+    var getDocumentsHandler: ((_ completion: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> ())? = nil
+    func getDocuments(source: FirestoreSource, completion: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) {
         getDocumentsSourceCompletionCallCount += 1
         if let __getDocumentsSourceCompletionHandler = self.getDocumentsSourceCompletionHandler {
             __getDocumentsSourceCompletionHandler(source, completion)
         }
     }
     var getDocumentsSourceCompletionCallCount: Int = 0
-    var getDocumentsSourceCompletionHandler: ((_ source: FirestoreSource, _ completion: (Result<QuerySnapshotProtocol, Error>) -> Void) -> ())? = nil
+    var getDocumentsSourceCompletionHandler: ((_ source: FirestoreSource, _ completion: @escaping (Result<QuerySnapshotProtocol, Error>) -> Void) -> ())? = nil
     func limit(toLast value: Int) -> QueryProtocol {
         limitToLastValueCallCount += 1
         if let __limitToLastValueHandler = self.limitToLastValueHandler {
@@ -599,14 +599,14 @@ class TransactionProtocolMock: TransactionProtocol {
 class WriteBatchProtocolMock: WriteBatchProtocol {
 
     // MARK: - Methods
-    func commit(completion: (Result<Void, Error>) -> Void) {
+    func commit(completion: @escaping (Result<Void, Error>) -> Void) {
         commitCallCount += 1
         if let __commitHandler = self.commitHandler {
             __commitHandler(completion)
         }
     }
     var commitCallCount: Int = 0
-    var commitHandler: ((_ completion: (Result<Void, Error>) -> Void) -> ())? = nil
+    var commitHandler: ((_ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
     func deleteDocument(_ document: DocumentReferenceProtocol) {
         deleteDocumentCallCount += 1
         if let __deleteDocumentHandler = self.deleteDocumentHandler {

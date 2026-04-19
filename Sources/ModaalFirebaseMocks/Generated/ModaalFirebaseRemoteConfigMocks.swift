@@ -24,15 +24,15 @@ class FirebaseRemoteConfigProtocolMock: FirebaseRemoteConfigProtocol {
     }
 
     // MARK: - Methods
-    func activate(completion: (Result<Bool, Error>) -> Void) {
+    func activate(completion: @escaping (Result<Bool, Error>) -> Void) {
         activateCallCount += 1
         if let __activateHandler = self.activateHandler {
             __activateHandler(completion)
         }
     }
     var activateCallCount: Int = 0
-    var activateHandler: ((_ completion: (Result<Bool, Error>) -> Void) -> ())? = nil
-    func addOnConfigUpdateListener(_ listener: (Result<RemoteConfigUpdateProtocol, Error>) -> Void) -> RemoteConfigListenerRegistration {
+    var activateHandler: ((_ completion: @escaping (Result<Bool, Error>) -> Void) -> ())? = nil
+    func addOnConfigUpdateListener(_ listener: @escaping (Result<RemoteConfigUpdateProtocol, Error>) -> Void) -> RemoteConfigListenerRegistration {
         addOnConfigUpdateListenerCallCount += 1
         if let __addOnConfigUpdateListenerHandler = self.addOnConfigUpdateListenerHandler {
             return __addOnConfigUpdateListenerHandler(listener)
@@ -40,7 +40,7 @@ class FirebaseRemoteConfigProtocolMock: FirebaseRemoteConfigProtocol {
         fatalError("addOnConfigUpdateListenerHandler expected to be set.")
     }
     var addOnConfigUpdateListenerCallCount: Int = 0
-    var addOnConfigUpdateListenerHandler: ((_ listener: (Result<RemoteConfigUpdateProtocol, Error>) -> Void) -> (RemoteConfigListenerRegistration))? = nil
+    var addOnConfigUpdateListenerHandler: ((_ listener: @escaping (Result<RemoteConfigUpdateProtocol, Error>) -> Void) -> (RemoteConfigListenerRegistration))? = nil
     func allKeys(from source: ModaalRemoteConfigSource) -> [String] {
         allKeysCallCount += 1
         if let __allKeysHandler = self.allKeysHandler {
@@ -59,22 +59,22 @@ class FirebaseRemoteConfigProtocolMock: FirebaseRemoteConfigProtocol {
     }
     var configValueCallCount: Int = 0
     var configValueHandler: ((_ key: String) -> (RemoteConfigValueProtocol))? = nil
-    func fetch(completionHandler: (Result<ModaalRemoteConfigFetchStatus, Error>) -> Void) {
+    func fetch(completionHandler: @escaping (Result<ModaalRemoteConfigFetchStatus, Error>) -> Void) {
         fetchCallCount += 1
         if let __fetchHandler = self.fetchHandler {
             __fetchHandler(completionHandler)
         }
     }
     var fetchCallCount: Int = 0
-    var fetchHandler: ((_ completionHandler: (Result<ModaalRemoteConfigFetchStatus, Error>) -> Void) -> ())? = nil
-    func fetchAndActivate(completionHandler: (Result<ModaalRemoteConfigFetchAndActivateStatus, Error>) -> Void) {
+    var fetchHandler: ((_ completionHandler: @escaping (Result<ModaalRemoteConfigFetchStatus, Error>) -> Void) -> ())? = nil
+    func fetchAndActivate(completionHandler: @escaping (Result<ModaalRemoteConfigFetchAndActivateStatus, Error>) -> Void) {
         fetchAndActivateCallCount += 1
         if let __fetchAndActivateHandler = self.fetchAndActivateHandler {
             __fetchAndActivateHandler(completionHandler)
         }
     }
     var fetchAndActivateCallCount: Int = 0
-    var fetchAndActivateHandler: ((_ completionHandler: (Result<ModaalRemoteConfigFetchAndActivateStatus, Error>) -> Void) -> ())? = nil
+    var fetchAndActivateHandler: ((_ completionHandler: @escaping (Result<ModaalRemoteConfigFetchAndActivateStatus, Error>) -> Void) -> ())? = nil
     func setDefaults(_ defaults: [String: NSObject]?) {
         setDefaultsCallCount += 1
         if let __setDefaultsHandler = self.setDefaultsHandler {

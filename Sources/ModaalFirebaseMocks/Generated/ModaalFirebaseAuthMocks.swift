@@ -39,7 +39,7 @@ class FirebaseAuthProtocolMock: FirebaseAuthProtocol {
     var shareAuthStateAcrossDevicesSetCount: Int = 0
 
     // MARK: - Methods
-    func addStateDidChangeListener(_ listener: (FirebaseAuthProtocol, FirebaseUserProtocol?) -> Void) -> FirebaseAuthStateDidChangeListenerHandle {
+    func addStateDidChangeListener(_ listener: @escaping (FirebaseAuthProtocol, FirebaseUserProtocol?) -> Void) -> FirebaseAuthStateDidChangeListenerHandle {
         addStateDidChangeListenerCallCount += 1
         if let __addStateDidChangeListenerHandler = self.addStateDidChangeListenerHandler {
             return __addStateDidChangeListenerHandler(listener)
@@ -47,7 +47,7 @@ class FirebaseAuthProtocolMock: FirebaseAuthProtocol {
         fatalError("addStateDidChangeListenerHandler expected to be set.")
     }
     var addStateDidChangeListenerCallCount: Int = 0
-    var addStateDidChangeListenerHandler: ((_ listener: (FirebaseAuthProtocol, FirebaseUserProtocol?) -> Void) -> (FirebaseAuthStateDidChangeListenerHandle))? = nil
+    var addStateDidChangeListenerHandler: ((_ listener: @escaping (FirebaseAuthProtocol, FirebaseUserProtocol?) -> Void) -> (FirebaseAuthStateDidChangeListenerHandle))? = nil
     func canHandleOpenUrl(_ url: URL) -> Bool {
         canHandleOpenUrlCallCount += 1
         if let __canHandleOpenUrlHandler = self.canHandleOpenUrlHandler {
@@ -66,22 +66,22 @@ class FirebaseAuthProtocolMock: FirebaseAuthProtocol {
     }
     var canHandleRemoteNotificationCallCount: Int = 0
     var canHandleRemoteNotificationHandler: ((_ notification: [AnyHashable: Any]) -> (Bool))? = nil
-    func createUser(withEmail email: String, password: String, completion: (Result<FirebaseAuthDataResultProtocol, Error>) -> ()) {
+    func createUser(withEmail email: String, password: String, completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> ()) {
         createUserCallCount += 1
         if let __createUserHandler = self.createUserHandler {
             __createUserHandler(email, password, completion)
         }
     }
     var createUserCallCount: Int = 0
-    var createUserHandler: ((_ email: String, _ password: String, _ completion: (Result<FirebaseAuthDataResultProtocol, Error>) -> ()) -> ())? = nil
-    func deleteUser(_ user: FirebaseUserProtocol, completion: (Result<Void, Error>) -> Void) {
+    var createUserHandler: ((_ email: String, _ password: String, _ completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> ()) -> ())? = nil
+    func deleteUser(_ user: FirebaseUserProtocol, completion: @escaping (Result<Void, Error>) -> Void) {
         deleteUserCallCount += 1
         if let __deleteUserHandler = self.deleteUserHandler {
             __deleteUserHandler(user, completion)
         }
     }
     var deleteUserCallCount: Int = 0
-    var deleteUserHandler: ((_ user: FirebaseUserProtocol, _ completion: (Result<Void, Error>) -> Void) -> ())? = nil
+    var deleteUserHandler: ((_ user: FirebaseUserProtocol, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
     func removeStateDidChangeListener(_ handle: FirebaseAuthStateDidChangeListenerHandle) {
         removeStateDidChangeListenerCallCount += 1
         if let __removeStateDidChangeListenerHandler = self.removeStateDidChangeListenerHandler {
@@ -90,22 +90,22 @@ class FirebaseAuthProtocolMock: FirebaseAuthProtocol {
     }
     var removeStateDidChangeListenerCallCount: Int = 0
     var removeStateDidChangeListenerHandler: ((_ handle: FirebaseAuthStateDidChangeListenerHandle) -> ())? = nil
-    func revokeToken(withAuthorizationCode authorizationCode: String, completion: (Result<Void, Error>) -> Void) {
+    func revokeToken(withAuthorizationCode authorizationCode: String, completion: @escaping (Result<Void, Error>) -> Void) {
         revokeTokenCallCount += 1
         if let __revokeTokenHandler = self.revokeTokenHandler {
             __revokeTokenHandler(authorizationCode, completion)
         }
     }
     var revokeTokenCallCount: Int = 0
-    var revokeTokenHandler: ((_ authorizationCode: String, _ completion: (Result<Void, Error>) -> Void) -> ())? = nil
-    func sendPasswordReset(withEmail: String, completion: (Result<Void, Error>) -> ()) {
+    var revokeTokenHandler: ((_ authorizationCode: String, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func sendPasswordReset(withEmail: String, completion: @escaping (Result<Void, Error>) -> ()) {
         sendPasswordResetCallCount += 1
         if let __sendPasswordResetHandler = self.sendPasswordResetHandler {
             __sendPasswordResetHandler(withEmail, completion)
         }
     }
     var sendPasswordResetCallCount: Int = 0
-    var sendPasswordResetHandler: ((_ withEmail: String, _ completion: (Result<Void, Error>) -> ()) -> ())? = nil
+    var sendPasswordResetHandler: ((_ withEmail: String, _ completion: @escaping (Result<Void, Error>) -> ()) -> ())? = nil
     func setAPNSToken(_ deviceToken: Data, type: FirebaseAuthAPNSTokenType) {
         setAPNSTokenCallCount += 1
         if let __setAPNSTokenHandler = self.setAPNSTokenHandler {
@@ -114,30 +114,30 @@ class FirebaseAuthProtocolMock: FirebaseAuthProtocol {
     }
     var setAPNSTokenCallCount: Int = 0
     var setAPNSTokenHandler: ((_ deviceToken: Data, _ type: FirebaseAuthAPNSTokenType) -> ())? = nil
-    func signIn(with credential: FirebaseAuthCredentialProtocol, completion: (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) {
+    func signIn(with credential: FirebaseAuthCredentialProtocol, completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) {
         signInCallCount += 1
         if let __signInHandler = self.signInHandler {
             __signInHandler(credential, completion)
         }
     }
     var signInCallCount: Int = 0
-    var signInHandler: ((_ credential: FirebaseAuthCredentialProtocol, _ completion: (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) -> ())? = nil
-    func signInAnonymously(completion: (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) {
+    var signInHandler: ((_ credential: FirebaseAuthCredentialProtocol, _ completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) -> ())? = nil
+    func signInAnonymously(completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) {
         signInAnonymouslyCallCount += 1
         if let __signInAnonymouslyHandler = self.signInAnonymouslyHandler {
             __signInAnonymouslyHandler(completion)
         }
     }
     var signInAnonymouslyCallCount: Int = 0
-    var signInAnonymouslyHandler: ((_ completion: (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) -> ())? = nil
-    func signIn(withEmail email: String, password: String, completion: (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) {
+    var signInAnonymouslyHandler: ((_ completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) -> ())? = nil
+    func signIn(withEmail email: String, password: String, completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) {
         signInWithEmailEmailPasswordCompletionCallCount += 1
         if let __signInWithEmailEmailPasswordCompletionHandler = self.signInWithEmailEmailPasswordCompletionHandler {
             __signInWithEmailEmailPasswordCompletionHandler(email, password, completion)
         }
     }
     var signInWithEmailEmailPasswordCompletionCallCount: Int = 0
-    var signInWithEmailEmailPasswordCompletionHandler: ((_ email: String, _ password: String, _ completion: (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) -> ())? = nil
+    var signInWithEmailEmailPasswordCompletionHandler: ((_ email: String, _ password: String, _ completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) -> ())? = nil
     func signOut() throws {
         signOutCallCount += 1
         if let __signOutHandler = self.signOutHandler {
@@ -217,76 +217,76 @@ class FirebaseUserProtocolMock: FirebaseUserProtocol {
     }
 
     // MARK: - Methods
-    func getIDToken(completion: (Result<String, Error>) -> Void) {
+    func getIDToken(completion: @escaping (Result<String, Error>) -> Void) {
         getIDTokenCallCount += 1
         if let __getIDTokenHandler = self.getIDTokenHandler {
             __getIDTokenHandler(completion)
         }
     }
     var getIDTokenCallCount: Int = 0
-    var getIDTokenHandler: ((_ completion: (Result<String, Error>) -> Void) -> ())? = nil
-    func getIDTokenResult(completion: (Result<FirebaseAuthTokenResultProtocol, Error>) -> Void) {
+    var getIDTokenHandler: ((_ completion: @escaping (Result<String, Error>) -> Void) -> ())? = nil
+    func getIDTokenResult(completion: @escaping (Result<FirebaseAuthTokenResultProtocol, Error>) -> Void) {
         getIDTokenResultCallCount += 1
         if let __getIDTokenResultHandler = self.getIDTokenResultHandler {
             __getIDTokenResultHandler(completion)
         }
     }
     var getIDTokenResultCallCount: Int = 0
-    var getIDTokenResultHandler: ((_ completion: (Result<FirebaseAuthTokenResultProtocol, Error>) -> Void) -> ())? = nil
-    func link(with credential: FirebaseAuthCredentialProtocol, completion: (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) {
+    var getIDTokenResultHandler: ((_ completion: @escaping (Result<FirebaseAuthTokenResultProtocol, Error>) -> Void) -> ())? = nil
+    func link(with credential: FirebaseAuthCredentialProtocol, completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) {
         linkCallCount += 1
         if let __linkHandler = self.linkHandler {
             __linkHandler(credential, completion)
         }
     }
     var linkCallCount: Int = 0
-    var linkHandler: ((_ credential: FirebaseAuthCredentialProtocol, _ completion: (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) -> ())? = nil
-    func reauthenticate(with credential: FirebaseAuthCredentialProtocol, completion: (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) {
+    var linkHandler: ((_ credential: FirebaseAuthCredentialProtocol, _ completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) -> ())? = nil
+    func reauthenticate(with credential: FirebaseAuthCredentialProtocol, completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) {
         reauthenticateCallCount += 1
         if let __reauthenticateHandler = self.reauthenticateHandler {
             __reauthenticateHandler(credential, completion)
         }
     }
     var reauthenticateCallCount: Int = 0
-    var reauthenticateHandler: ((_ credential: FirebaseAuthCredentialProtocol, _ completion: (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) -> ())? = nil
-    func reload(completion: (Result<Void, Error>) -> Void) {
+    var reauthenticateHandler: ((_ credential: FirebaseAuthCredentialProtocol, _ completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> Void) -> ())? = nil
+    func reload(completion: @escaping (Result<Void, Error>) -> Void) {
         reloadCallCount += 1
         if let __reloadHandler = self.reloadHandler {
             __reloadHandler(completion)
         }
     }
     var reloadCallCount: Int = 0
-    var reloadHandler: ((_ completion: (Result<Void, Error>) -> Void) -> ())? = nil
-    func sendEmailVerification(completion: (Result<Void, Error>) -> Void) {
+    var reloadHandler: ((_ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func sendEmailVerification(completion: @escaping (Result<Void, Error>) -> Void) {
         sendEmailVerificationCallCount += 1
         if let __sendEmailVerificationHandler = self.sendEmailVerificationHandler {
             __sendEmailVerificationHandler(completion)
         }
     }
     var sendEmailVerificationCallCount: Int = 0
-    var sendEmailVerificationHandler: ((_ completion: (Result<Void, Error>) -> Void) -> ())? = nil
-    func unlink(fromProvider provider: String, completion: (Result<FirebaseUserProtocol, Error>) -> Void) {
+    var sendEmailVerificationHandler: ((_ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func unlink(fromProvider provider: String, completion: @escaping (Result<FirebaseUserProtocol, Error>) -> Void) {
         unlinkCallCount += 1
         if let __unlinkHandler = self.unlinkHandler {
             __unlinkHandler(provider, completion)
         }
     }
     var unlinkCallCount: Int = 0
-    var unlinkHandler: ((_ provider: String, _ completion: (Result<FirebaseUserProtocol, Error>) -> Void) -> ())? = nil
-    func updatePassword(to password: String, completion: (Result<Void, Error>) -> Void) {
+    var unlinkHandler: ((_ provider: String, _ completion: @escaping (Result<FirebaseUserProtocol, Error>) -> Void) -> ())? = nil
+    func updatePassword(to password: String, completion: @escaping (Result<Void, Error>) -> Void) {
         updatePasswordCallCount += 1
         if let __updatePasswordHandler = self.updatePasswordHandler {
             __updatePasswordHandler(password, completion)
         }
     }
     var updatePasswordCallCount: Int = 0
-    var updatePasswordHandler: ((_ password: String, _ completion: (Result<Void, Error>) -> Void) -> ())? = nil
-    func updateUserProfile(displayName: String?, photoURL: URL?, completion: (Result<Void, Error>) -> ()) {
+    var updatePasswordHandler: ((_ password: String, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func updateUserProfile(displayName: String?, photoURL: URL?, completion: @escaping (Result<Void, Error>) -> ()) {
         updateUserProfileCallCount += 1
         if let __updateUserProfileHandler = self.updateUserProfileHandler {
             __updateUserProfileHandler(displayName, photoURL, completion)
         }
     }
     var updateUserProfileCallCount: Int = 0
-    var updateUserProfileHandler: ((_ displayName: String?, _ photoURL: URL?, _ completion: (Result<Void, Error>) -> ()) -> ())? = nil
+    var updateUserProfileHandler: ((_ displayName: String?, _ photoURL: URL?, _ completion: @escaping (Result<Void, Error>) -> ()) -> ())? = nil
 }
