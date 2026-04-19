@@ -63,7 +63,6 @@ run_xcbeautify() {
 XCODEBUILD_COMMON=(
   -derivedDataPath "$DERIVED_DATA_PATH/DerivedData"
   -clonedSourcePackagesDirPath "$DERIVED_DATA_PATH/SourcePackages"
-  -destination "$DESTINATION"
   -configuration "$CONFIGURATION"
   -sdk "iphonesimulator"
   -skipPackagePluginValidation
@@ -101,6 +100,7 @@ PACKAGE_SCHEME="ModaalFirebase-Package"
 
 xcodebuild build \
   -scheme "$PACKAGE_SCHEME" \
+  -destination "$DESTINATION" \
   "${XCODEBUILD_COMMON[@]}" \
   | run_xcbeautify
 
@@ -121,6 +121,7 @@ cd "$GIT_ROOT"
 xcodebuild build \
   -project "$SAMPLE_APP_DIR/SampleApp.xcodeproj" \
   -scheme "SampleApp" \
+  -destination "$DESTINATION" \
   "${XCODEBUILD_COMMON[@]}" \
   | run_xcbeautify
 
@@ -132,9 +133,29 @@ echo "────────────────────────�
 echo -e "\033[1;33m$CURRENT_STEP\033[0m"
 echo "──────────────────────────────────────────"
 
+# xcodebuild test requires a concrete simulator (not "generic/..."). Pick the
+# first available iPhone simulator; override via TEST_DESTINATION if needed.
+if [ -z "${TEST_DESTINATION:-}" ]; then
+  TEST_UDID=$(xcrun simctl list devices available \
+    | grep -E "^[[:space:]]*iPhone" \
+    | grep -oE "[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}" \
+    | head -1 || true)
+
+  if [ -z "$TEST_UDID" ]; then
+    echo -e "\033[1;31mNo available iPhone Simulator found for tests\033[0m"
+    echo "Available devices:"
+    xcrun simctl list devices available
+    exit 1
+  fi
+
+  TEST_DESTINATION="platform=iOS Simulator,id=$TEST_UDID"
+fi
+echo "Using test destination: $TEST_DESTINATION"
+
 TEST_EXIT=0
 xcodebuild test \
   -scheme "$PACKAGE_SCHEME" \
+  -destination "$TEST_DESTINATION" \
   "${XCODEBUILD_COMMON[@]}" \
   | run_xcbeautify \
   || TEST_EXIT=$?
