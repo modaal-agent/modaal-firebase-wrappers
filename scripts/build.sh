@@ -71,6 +71,24 @@ XCODEBUILD_COMMON=(
 
 cd "$GIT_ROOT"
 
+# ── Step 0: Validate generated mocks are up-to-date ──────────────
+CURRENT_STEP="Validate generated mocks"
+echo ""
+echo "──────────────────────────────────────────"
+echo -e "\033[1;33m$CURRENT_STEP\033[0m"
+echo "──────────────────────────────────────────"
+
+install_if_missing sourcery
+
+"$SCRIPT_DIR/generate-mocks.sh"
+
+if ! git diff --quiet Sources/ModaalFirebaseMocks/Generated/; then
+  echo -e "\033[1;31mGenerated mocks are stale. Run scripts/generate-mocks.sh and commit the result.\033[0m"
+  git diff --stat Sources/ModaalFirebaseMocks/Generated/
+  exit 1
+fi
+echo -e "\033[0;32mMocks are up-to-date ✓\033[0m"
+
 # ── Step 1: Build all library targets (SPM) ───────────────────────
 CURRENT_STEP="Build library targets"
 echo ""
