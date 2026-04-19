@@ -22,6 +22,7 @@ let package = Package(
     .library(name: "ModaalCloudStorage", targets: ["ModaalCloudStorage"]),
     .library(name: "ModaalFirebaseMessaging", targets: ["ModaalFirebaseMessaging"]),
     .library(name: "ModaalFirebaseRemoteConfig", targets: ["ModaalFirebaseRemoteConfig"]),
+    .library(name: "ModaalFirebaseMocks", targets: ["ModaalFirebaseMocks"]),
   ],
   dependencies: [
     .package(url: "https://github.com/akaffenberger/firebase-ios-sdk-xcframeworks.git", from: "12.12.0"),
@@ -107,6 +108,21 @@ let package = Package(
       dependencies: [
         "ModaalFirebaseCore",
         .product(name: "FirebaseRemoteConfig", package: firebaseSDK),
+      ]
+    ),
+
+    // MARK: - Pre-generated Mocks
+
+    .target(
+      name: "ModaalFirebaseMocks",
+      dependencies: [
+        "ModaalFirebaseAuth",
+        "ModaalFirebaseAnalytics",
+        "ModaalFirebaseCrashlytics",
+        "ModaalFirestore",
+        "ModaalCloudStorage",
+        "ModaalFirebaseMessaging",
+        "ModaalFirebaseRemoteConfig",
       ]
     ),
   ]
