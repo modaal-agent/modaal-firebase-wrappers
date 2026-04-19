@@ -56,15 +56,21 @@ mkdir -p "$OUTPUT_DIR"
 # ── Generate mocks per module ─────────────────────────────────────
 #
 # Each module gets a separate sourcery run producing one output file.
-# The --args import=<Module> adds the correct import statement.
+# --args passes import= for regular imports, testable= for @testable imports.
 # Only protocols annotated with `/// sourcery: CreateMock` are processed.
 
 generate_module() {
   local module="$1"
   shift
-  local extra_imports=("$@")
   local sources_dir="$GIT_ROOT/Sources/$module"
   local output_file="$OUTPUT_DIR/${module}Mocks.swift"
+
+  # Build --args: Foundation is always needed, module is @testable,
+  # any extra args (e.g. import=UIKit) are passed through.
+  local args=("--args" "import=Foundation,testable=$module")
+  for extra in "$@"; do
+    args+=("--args" "$extra")
+  done
 
   echo "Generating mocks for $module..."
   sourcery \
@@ -72,20 +78,10 @@ generate_module() {
     --sources "$ANNOTATIONS_DIR" \
     --templates "$TEMPLATES_DIR/Mocks.swifttemplate" \
     --output "$output_file" \
-    --args "testable=$module" \
+    "${args[@]}" \
     --quiet
 
-  # Sourcery's --args only supports a single import value.
-  # Insert Foundation (and any extra imports) before the @testable import line.
   if [ -f "$output_file" ]; then
-    local insert="import Foundation"
-    for imp in "${extra_imports[@]}"; do
-      insert="$insert\\
-import $imp"
-    done
-    sed -i '' "s/^@testable import $module/$insert\\
-@testable import $module/" "$output_file"
-
     local count
     count=$(grep -c "^class .*Mock" "$output_file" 2>/dev/null || echo "0")
     echo "  → $output_file ($count mocks)"
@@ -94,7 +90,7 @@ import $imp"
   fi
 }
 
-generate_module "ModaalFirebaseAuth" "UIKit"
+generate_module "ModaalFirebaseAuth" "import=UIKit"
 generate_module "ModaalFirebaseAnalytics"
 generate_module "ModaalFirebaseCrashlytics"
 generate_module "ModaalFirestore"
