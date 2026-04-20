@@ -1,0 +1,30 @@
+name: RunnableDemo
+options:
+  createIntermediateGroups: true
+  developmentLanguage: en
+packages:
+  ModaalFirebase:
+    path: ../..
+targets:
+  RunnableDemo:
+    type: application
+    platform: iOS
+    deploymentTarget: "17.0"
+    sources: [RunnableDemo]
+    info:
+      path: RunnableDemo/Info.plist
+      properties:
+        # Without this, iOS falls back to a legacy launch image and
+        # letterboxes the app with black bars top/bottom.
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    settings:
+      base:
+        CODE_SIGNING_ALLOWED: "NO"
+        PRODUCT_BUNDLE_IDENTIFIER: dev.modaal.firebase.runnable-demo
+    dependencies:
+      - package: ModaalFirebase
+        product: ModaalFirebaseCore
+      - package: ModaalFirebase
+        product: ModaalFirestore
