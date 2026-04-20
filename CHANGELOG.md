@@ -1,5 +1,23 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **In-code Firebase configuration** — new `ModaalFirebaseOptions` struct + `ModaalFirebase.configure(options:)` overload. Consumers can now configure Firebase without `GoogleService-Info.plist` and without importing `FirebaseCore`.
+- **Emulator-aware factories** — `FirestoreWrapper.makeDefault(emulator:)`, `FirebaseAuthWrapper.makeDefault(emulator:)`, `CloudStorageWrapper.makeDefault(emulator:)`. Each returns a wrapper around the default SDK instance, optionally pre-configured to hit a local Firebase Emulator host:port. Parallel signatures across all three services.
+- **Firebase Emulator integration testing** — new `ModaalFirebaseEmulatorTests` bundle hosted by an XcodeGen project (`Tests/EmulatorTests/`), covering:
+  - **Smoke tests** (one per wrapper family): `FirestoreWrapperSmokeTests`, `FirebaseAuthWrapperSmokeTests`, `CloudStorageWrapperSmokeTests`, `FirebaseAnalyticsWrapperSmokeTests`, `FirebaseCrashlyticsSmokeTests`, `FirebaseMessagingWrapperSmokeTests`, `FirebaseRemoteConfigWrapperSmokeTests`.
+  - **Integration tests** (per-service round-trips): `FirestoreIntegrationTests` (setData, merge vs overwrite, filters, snapshot listeners), `AuthIntegrationTests` (anonymous sign-in, state listener), `CloudStorageIntegrationTests` (put/get/metadata/delete), `RemoteConfigIntegrationTests` (defaults).
+  - Every test body is protocol-typed (`FirestoreProtocol`, `FirebaseAuthProtocol`, `CloudStorageProtocol`, etc.); `Shared/EmulatorHarness.swift` + the host app's `init` have zero `import Firebase*` — everything goes through the wrappers.
+- **`scripts/run-integration-tests.sh`** — self-sufficient runner: installs `firebase-tools`, `openjdk@21`, starts the emulator, generates the XcodeGen test project, runs tests, tears down on exit.
+- **`.github/workflows/integration-tests.yml`** — nightly (03:00 UTC) + `workflow_dispatch`. Intentionally not on every PR.
+- **`Examples/RunnableDemo/`** — SwiftUI stock-ticker demo. `CollectionReferenceProtocol.snapshotPublisher()` feeds the UI; a background `Timer.publish` pushes fake market data via `DocumentReferenceProtocol.setData(_:)`. Zero `import Firebase*` in the app.
+- **`Examples/SampleApp/README.md`** — documents the compile-only API-surface-verification role of SampleApp vs. RunnableDemo.
+- **`Docs/human/emulator-setup.md`** — human-readable setup guide.
+
+### Fixed
+- **SampleApp launch screen** — `UILaunchScreen: {}` in Info.plist; previously fell back to a legacy launch image that letterboxed the app.
+
 ## [1.1.0] — 2026-04-19
 
 ### Added
