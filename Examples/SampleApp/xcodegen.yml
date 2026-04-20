@@ -11,11 +11,18 @@ targets:
     platform: iOS
     deploymentTarget: "15.0"
     sources: [SampleApp]
+    info:
+      path: SampleApp/Info.plist
+      properties:
+        # Without this, iOS falls back to a legacy launch image and
+        # letterboxes the app with black bars top/bottom.
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
     settings:
       base:
         CODE_SIGNING_ALLOWED: "NO"
         PRODUCT_BUNDLE_IDENTIFIER: dev.modaal.firebase.sample-app
-        GENERATE_INFOPLIST_FILE: "YES"
     dependencies:
       - package: ModaalFirebase
         product: ModaalFirebaseCore
