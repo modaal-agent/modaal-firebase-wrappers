@@ -144,43 +144,11 @@ let package = Package(
       ]
     ),
 
-    // MARK: - Emulator-backed tests
-    // Smoke tests run against the Firebase Emulator when `MODAAL_EMULATOR_HOST`
-    // is set; otherwise they XCTSkip. Integration tests require the emulator.
-    // Both are invoked by `scripts/run-integration-tests.sh`.
+    // Emulator-backed tests (smoke + integration) live in an XcodeGen-managed
+    // project at `Tests/EmulatorTests/` — NOT as SPM testTargets. SPM has no
+    // concept of a test host, and Firebase's internal LaunchServices lookups
+    // crash inside bare xctest bundles. The XcodeGen project bundles a
+    // minimal host app to work around this. See `Tests/EmulatorTests/README.md`.
 
-    .testTarget(
-      name: "ModaalFirebaseSmokeTests",
-      dependencies: [
-        "ModaalFirebaseCore",
-        "ModaalFirebaseAuth",
-        "ModaalFirebaseAnalytics",
-        "ModaalFirebaseCrashlytics",
-        "ModaalFirestore",
-        "ModaalCloudStorage",
-        "ModaalFirebaseMessaging",
-        "ModaalFirebaseRemoteConfig",
-        .product(name: "FirebaseAuth", package: firebaseSDK),
-        .product(name: "FirebaseFirestore", package: firebaseSDK),
-        .product(name: "FirebaseStorage", package: firebaseSDK),
-        .product(name: "FirebaseMessaging", package: firebaseSDK),
-        .product(name: "FirebaseRemoteConfig", package: firebaseSDK),
-        .product(name: "FirebaseCrashlytics", package: firebaseSDK),
-      ]
-    ),
-    .testTarget(
-      name: "ModaalFirebaseIntegrationTests",
-      dependencies: [
-        "ModaalFirebaseCore",
-        "ModaalFirebaseAuth",
-        "ModaalFirestore",
-        "ModaalCloudStorage",
-        "ModaalFirebaseRemoteConfig",
-        .product(name: "FirebaseAuth", package: firebaseSDK),
-        .product(name: "FirebaseFirestore", package: firebaseSDK),
-        .product(name: "FirebaseStorage", package: firebaseSDK),
-        .product(name: "FirebaseRemoteConfig", package: firebaseSDK),
-      ]
-    ),
   ]
 )

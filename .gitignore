@@ -2,11 +2,19 @@
 .build/
 DerivedData/
 
+# Firebase Emulator runtime logs (written to repo root by firebase-tools)
+firebase-debug.log
+firestore-debug.log
+storage-debug.log
+auth-debug.log
+ui-debug.log
+
 # Generated Xcode projects (XcodeGen output)
 *.xcodeproj
 
-# Generated Info.plist (XcodeGen output — scoped to SampleApp only)
+# Generated Info.plist (XcodeGen output)
 Examples/**/Info.plist
+Tests/EmulatorTests/**/Info.plist
 
 # Xcode user data
 xcuserdata/

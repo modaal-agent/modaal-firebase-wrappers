@@ -1,0 +1,113 @@
+name: EmulatorTests
+options:
+  createIntermediateGroups: true
+  developmentLanguage: en
+  deploymentTarget:
+    iOS: "15.0"
+
+packages:
+  ModaalFirebase:
+    path: ../..
+
+targets:
+  EmulatorTestHost:
+    type: application
+    platform: iOS
+    sources: [EmulatorTestHost]
+    info:
+      path: EmulatorTestHost/Info.plist
+      properties:
+        UILaunchScreen: {}
+        # Disable Firebase Messaging's UIApplicationDelegate swizzling. Without
+        # this, Messaging's auto-proxy runs on a background thread and the
+        # Main Thread Checker traps, killing the test process.
+        FirebaseAppDelegateProxyEnabled: false
+    settings:
+      base:
+        CODE_SIGNING_ALLOWED: "NO"
+        PRODUCT_BUNDLE_IDENTIFIER: dev.modaal.firebase.emulator-test-host
+        # Force-load every Objective-C class from the Firebase static
+        # xcframeworks into the host binary. Without this, classes the host
+        # app's Swift sources don't reference (e.g. FIRMessaging) get
+        # stripped at link time — and fail to resolve when the test bundle
+        # uses them via BUNDLE_LOADER.
+        OTHER_LDFLAGS: "-ObjC"
+    # Host owns every ModaalFirebase product link — test bundles inherit
+    # symbols via BUNDLE_LOADER, so re-listing these products on the test
+    # target would double-link the static libraries.
+    dependencies:
+      - package: ModaalFirebase
+        product: ModaalFirebaseCore
+      - package: ModaalFirebase
+        product: ModaalFirebaseAuth
+      - package: ModaalFirebase
+        product: ModaalFirebaseAnalytics
+      - package: ModaalFirebase
+        product: ModaalFirebaseCrashlytics
+      - package: ModaalFirebase
+        product: ModaalFirestore
+      - package: ModaalFirebase
+        product: ModaalCloudStorage
+      - package: ModaalFirebase
+        product: ModaalFirebaseMessaging
+      - package: ModaalFirebase
+        product: ModaalFirebaseRemoteConfig
+
+  # Single combined test target. The handoff split smoke vs. integration into
+  # two targets, but SPM/XcodeGen + Firebase's static xcframeworks don't
+  # tolerate the same product being linked into two test bundles alongside
+  # the host. Smoke and integration tests are distinguished by class name
+  # (FirebaseXxxSmokeTests vs. XxxIntegrationTests) instead.
+  ModaalFirebaseEmulatorTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Shared
+      - path: ../ModaalFirebaseSmokeTests
+      - path: ../ModaalFirebaseIntegrationTests
+    settings:
+      base:
+        CODE_SIGNING_ALLOWED: "NO"
+        GENERATE_INFOPLIST_FILE: "YES"
+        PRODUCT_BUNDLE_IDENTIFIER: dev.modaal.firebase.emulator-tests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/EmulatorTestHost.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/EmulatorTestHost"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+    dependencies:
+      - target: EmulatorTestHost
+      # Module visibility only. Symbols are resolved at the host app's link
+      # step (the test bundle inherits via BUNDLE_LOADER); re-linking here
+      # builds ModaalFirestore as its own dylib and that dylib can't resolve
+      # the Firebase xcframework's ObjC classes on its own.
+      - package: ModaalFirebase
+        product: ModaalFirebaseCore
+        link: false
+      - package: ModaalFirebase
+        product: ModaalFirebaseAuth
+        link: false
+      - package: ModaalFirebase
+        product: ModaalFirebaseAnalytics
+        link: false
+      - package: ModaalFirebase
+        product: ModaalFirebaseCrashlytics
+        link: false
+      - package: ModaalFirebase
+        product: ModaalFirestore
+        link: false
+      - package: ModaalFirebase
+        product: ModaalCloudStorage
+        link: false
+      - package: ModaalFirebase
+        product: ModaalFirebaseMessaging
+        link: false
+      - package: ModaalFirebase
+        product: ModaalFirebaseRemoteConfig
+        link: false
+
+schemes:
+  EmulatorTests:
+    build:
+      targets:
+        ModaalFirebaseEmulatorTests: [test]
+    test:
+      targets:
+        - ModaalFirebaseEmulatorTests

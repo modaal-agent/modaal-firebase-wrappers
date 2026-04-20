@@ -1,0 +1,21 @@
+name: Integration Tests
+on:
+  schedule:
+    - cron: '0 3 * * *'  # Nightly at 03:00 UTC
+  workflow_dispatch:
+
+jobs:
+  emulator-tests:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.3'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Run emulator-backed tests
+        # The script installs firebase-tools + JDK, starts the emulator,
+        # runs the tests, and tears the emulator down on exit.
+        run: scripts/run-integration-tests.sh
