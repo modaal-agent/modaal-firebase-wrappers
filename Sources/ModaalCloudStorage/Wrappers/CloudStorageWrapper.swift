@@ -12,6 +12,19 @@ public final class CloudStorageWrapper: CloudStorageProtocol {
     self.storage = storage
   }
 
+  /// Build a wrapper around the default `Storage.storage()` instance,
+  /// optionally pointing it at the local Firebase Emulator.
+  ///
+  /// Saves consumers from having to `import FirebaseStorage` just to run
+  /// against the emulator — parallels `FirestoreWrapper.makeDefault`.
+  public static func makeDefault(emulator: (host: String, port: Int)? = nil) -> CloudStorageWrapper {
+    let storage = Storage.storage()
+    if let emulator {
+      storage.useEmulator(withHost: emulator.host, port: emulator.port)
+    }
+    return CloudStorageWrapper(storage: storage)
+  }
+
   // MARK: - CloudStorageProtocol
 
   public func reference() -> CloudStorageReferencing {

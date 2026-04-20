@@ -14,6 +14,19 @@ public final class FirebaseAuthWrapper: FirebaseAuthProtocol {
     self.auth = auth
   }
 
+  /// Build a wrapper around the default `Auth.auth()` instance, optionally
+  /// pointing it at the local Firebase Emulator.
+  ///
+  /// Saves consumers from having to `import FirebaseAuth` just to run
+  /// against the emulator — parallels `FirestoreWrapper.makeDefault`.
+  public static func makeDefault(emulator: (host: String, port: Int)? = nil) -> FirebaseAuthWrapper {
+    let auth = Auth.auth()
+    if let emulator {
+      auth.useEmulator(withHost: emulator.host, port: emulator.port)
+    }
+    return FirebaseAuthWrapper(auth: auth)
+  }
+
   // MARK: - FirebaseAuthProtocol
 
   public var shareAuthStateAcrossDevices: Bool {

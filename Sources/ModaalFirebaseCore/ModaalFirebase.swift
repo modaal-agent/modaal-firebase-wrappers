@@ -26,4 +26,47 @@ public final class ModaalFirebase {
     FirebaseApp.configure(options: options)
     return FirAppOptions(clientID: options.clientID ?? "")
   }
+
+  /// Configure Firebase with options built in code — useful for testing with
+  /// the Firebase Emulator Suite (project IDs starting with `demo-`) or for
+  /// apps that don't ship `GoogleService-Info.plist`.
+  public func configure(options: ModaalFirebaseOptions) {
+    let firebaseOptions = FirebaseOptions(googleAppID: options.googleAppID,
+                                          gcmSenderID: options.gcmSenderID)
+    if let apiKey = options.apiKey { firebaseOptions.apiKey = apiKey }
+    if let projectID = options.projectID { firebaseOptions.projectID = projectID }
+    if let storageBucket = options.storageBucket { firebaseOptions.storageBucket = storageBucket }
+    if let clientID = options.clientID { firebaseOptions.clientID = clientID }
+    if let bundleID = options.bundleID { firebaseOptions.bundleID = bundleID }
+    FirebaseApp.configure(options: firebaseOptions)
+  }
+}
+
+/// In-code Firebase configuration. Mirrors `FirebaseOptions` — the fields
+/// most commonly needed for emulator / testing setups, without making
+/// consumers `import FirebaseCore`.
+public struct ModaalFirebaseOptions {
+  public let googleAppID: String
+  public let gcmSenderID: String
+  public var apiKey: String?
+  public var projectID: String?
+  public var storageBucket: String?
+  public var clientID: String?
+  public var bundleID: String?
+
+  public init(googleAppID: String,
+              gcmSenderID: String,
+              apiKey: String? = nil,
+              projectID: String? = nil,
+              storageBucket: String? = nil,
+              clientID: String? = nil,
+              bundleID: String? = nil) {
+    self.googleAppID = googleAppID
+    self.gcmSenderID = gcmSenderID
+    self.apiKey = apiKey
+    self.projectID = projectID
+    self.storageBucket = storageBucket
+    self.clientID = clientID
+    self.bundleID = bundleID
+  }
 }

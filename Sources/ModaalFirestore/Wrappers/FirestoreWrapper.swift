@@ -12,6 +12,23 @@ public final class FirestoreWrapper: FirestoreProtocol {
     self.firestore = firestore
   }
 
+  /// Build a wrapper around the default `Firestore.firestore()` instance,
+  /// optionally pointing it at the local Firebase Emulator.
+  ///
+  /// Saves consumers from having to `import FirebaseFirestore` just to run
+  /// against the emulator — common in tests and in demo / internal apps.
+  public static func makeDefault(emulator: (host: String, port: Int)? = nil) -> FirestoreWrapper {
+    let firestore = Firestore.firestore()
+    if let emulator {
+      let settings = FirestoreSettings()
+      settings.host = "\(emulator.host):\(emulator.port)"
+      settings.isSSLEnabled = false
+      settings.cacheSettings = MemoryCacheSettings()
+      firestore.settings = settings
+    }
+    return FirestoreWrapper(firestore: firestore)
+  }
+
   // MARK: - FirestoreProtocol
 
   public func collection(_ collectionPath: String) -> CollectionReferenceProtocol {
