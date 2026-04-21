@@ -4,7 +4,10 @@
 
 ### Added
 - **In-code Firebase configuration** — new `ModaalFirebaseOptions` struct + `ModaalFirebase.configure(options:)` overload. Consumers can now configure Firebase without `GoogleService-Info.plist` and without importing `FirebaseCore`.
-- **Emulator-aware factories** — `FirestoreWrapper.makeDefault(emulator:)`, `FirebaseAuthWrapper.makeDefault(emulator:)`, `CloudStorageWrapper.makeDefault(emulator:)`. Each returns a wrapper around the default SDK instance, optionally pre-configured to hit a local Firebase Emulator host:port. Parallel signatures across all three services.
+- **`makeDefault()` factories across every service** — wrap the Firebase SDK's default instance behind one call, no `import Firebase*` needed at the construction site. Three shapes:
+  - **Services with an emulator** (Firestore / Auth / Cloud Storage): `makeDefault(emulator: (host: String, port: Int)? = nil)` — optionally pre-configures the emulator endpoint.
+  - **Services without an emulator** (Messaging / Remote Config): bare `makeDefault()` — wraps the default SDK instance.
+  - **Direct-conformance service** (Crashlytics): protocol-level static factory with `where Self == Crashlytics`; call via implicit-member syntax — `let c: FirebaseCrashlyticsProtocol = .makeDefault()`.
 - **Firebase Emulator integration testing** — new `ModaalFirebaseEmulatorTests` bundle hosted by an XcodeGen project (`Tests/EmulatorTests/`), covering:
   - **Smoke tests** (one per wrapper family): `FirestoreWrapperSmokeTests`, `FirebaseAuthWrapperSmokeTests`, `CloudStorageWrapperSmokeTests`, `FirebaseAnalyticsWrapperSmokeTests`, `FirebaseCrashlyticsSmokeTests`, `FirebaseMessagingWrapperSmokeTests`, `FirebaseRemoteConfigWrapperSmokeTests`.
   - **Integration tests** (per-service round-trips): `FirestoreIntegrationTests` (setData, merge vs overwrite, filters, snapshot listeners), `AuthIntegrationTests` (anonymous sign-in, state listener), `CloudStorageIntegrationTests` (put/get/metadata/delete), `RemoteConfigIntegrationTests` (defaults).

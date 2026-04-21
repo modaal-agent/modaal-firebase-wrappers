@@ -15,17 +15,19 @@ firebase emulators:start --only firestore --project demo-modaal
 
 # 2. Generate + open the Xcode project
 cd Examples/RunnableDemo
-mint run yonaskolb/XcodeGen xcodegen generate --spec xcodegen.yml
+$(brew --prefix)/bin/mint run yonaskolb/XcodeGen xcodegen generate --spec xcodegen.yml
 open RunnableDemo.xcodeproj
 
 # 3. Build + run on any iOS 17+ Simulator
 ```
 
+> Homebrew's `mint` is shadowed by an npm package of the same name — use the absolute `$(brew --prefix)/bin/mint` so the right binary is invoked.
+
 You should see six symbols immediately (seeded on launch) and prices wobbling every second.
 
 ## Files
 
-- `RunnableDemoApp.swift` — SwiftUI `@main` + `AppBootstrap.configure()` (the sole Firebase-SDK touchpoint)
+- `RunnableDemoApp.swift` — SwiftUI `@main` + `AppBootstrap.configure()`. Zero `import Firebase*` — uses `ModaalFirebase.configure(options:)` and `FirestoreWrapper.makeDefault(emulator:)`.
 - `TickerView.swift` — `TickerViewModel` + `TickerView` + `TickerRow`, driven by `CollectionReferenceProtocol.snapshotPublisher()`
 - `TickerWriter.swift` — timer-driven writer using `DocumentReferenceProtocol.setData(_:)` Combine wrapper
 - `Ticker.swift` — plain model struct + seed catalog

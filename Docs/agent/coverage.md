@@ -7,8 +7,11 @@ Per-module coverage of the Firebase iOS SDK 12.x API surface. "Wrapped" means a 
 | API | Status |
 |-----|--------|
 | `FirebaseApp.configure()` | Wrapped (`ModaalFirebase.shared.configure()`) |
-| `FirebaseApp.configure(options:)` | Wrapped (`configure(plistPath:)`) |
+| `FirebaseApp.configure(options:)` from plist | Wrapped (`configure(plistPath:)`) |
+| `FirebaseApp.configure(options:)` in-code | Wrapped (`configure(options:)` + `ModaalFirebaseOptions`) |
 | `FirAppOptions.clientID` | Wrapped |
+| `FirebaseOptions` fields: `googleAppID` / `gcmSenderID` / `apiKey` / `projectID` / `storageBucket` / `clientID` / `bundleID` | Wrapped via `ModaalFirebaseOptions` |
+| `FirebaseOptions` fields: `androidClientID` / `appGroupID` / `deepLinkURLScheme` / `databaseURL` | Not covered (additive when needed) |
 
 No escape hatch needed — Core is a thin bootstrap layer.
 
@@ -38,6 +41,8 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `Auth.languageCode` | Escape hatch (`authWrapper.auth.languageCode`) |
 | `Auth.signIn(withEmail:link:)` | Escape hatch |
 | `User.multiFactor` | Escape hatch |
+| `Auth.auth()` default instance | Wrapped (`FirebaseAuthWrapper.makeDefault(emulator:)`) |
+| `Auth.useEmulator(host:port:)` | Wrapped via `makeDefault(emulator:)` |
 
 **Escape hatch:** `FirebaseAuthWrapper.auth: Auth` (public)
 
@@ -67,6 +72,7 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `isCrashlyticsCollectionEnabled` | Direct access on concrete `Crashlytics` instance |
 | `setCrashlyticsCollectionEnabled(_:)` | Direct access on concrete `Crashlytics` instance |
 | `didCrashDuringPreviousExecution` | Direct access on concrete `Crashlytics` instance |
+| `Crashlytics.crashlytics()` default instance | Wrapped (`FirebaseCrashlyticsProtocol.makeDefault()` — protocol-level static factory, implicit-member syntax: `let c: FirebaseCrashlyticsProtocol = .makeDefault()`) |
 
 **Note:** Crashlytics uses direct extension conformance (`extension Crashlytics: FirebaseCrashlyticsProtocol {}`). The consumer already has the concrete type — privacy toggles and other properties are accessible directly. The xcframeworks binary doesn't expose these in a protocol-conformable way.
 
@@ -87,6 +93,8 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `DocumentSnapshot.data(as:)` / `setData(from:)` (Codable) | Escape hatch |
 | `Firestore.settings` / `enableNetwork` / `disableNetwork` | Escape hatch |
 | `Firestore.clearPersistence` / `terminate` / `waitForPendingWrites` | Escape hatch |
+| `Firestore.firestore()` default instance | Wrapped (`FirestoreWrapper.makeDefault(emulator:)`) |
+| `FirestoreSettings.host` / `isSSLEnabled` / `MemoryCacheSettings` (emulator wiring) | Wrapped via `makeDefault(emulator:)` |
 
 **Escape hatch:** `FirestoreWrapper.firestore: Firestore` (public)
 
@@ -102,6 +110,8 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `delete` | Wrapped |
 | `listAll` | Wrapped |
 | `list(maxResults:)` / `list(maxResults:pageToken:)` | Escape hatch |
+| `Storage.storage()` default instance | Wrapped (`CloudStorageWrapper.makeDefault(emulator:)`) |
+| `Storage.useEmulator(host:port:)` | Wrapped via `makeDefault(emulator:)` |
 
 **Escape hatch:** `CloudStorageWrapper.storage: Storage` (public), `CloudStorageReference.reference: StorageReference` (public)
 
@@ -114,8 +124,11 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `subscribe(toTopic:)` / `unsubscribe(fromTopic:)` | Wrapped |
 | `MessagingDelegate` | Escape hatch (`messagingWrapper.messaging.delegate`) |
 | `appDidReceiveMessage(_:)` | Escape hatch |
+| `Messaging.messaging()` default instance | Wrapped (`FirebaseMessagingWrapper.makeDefault()`) |
 
 **Escape hatch:** `FirebaseMessagingWrapper.messaging: Messaging` (public)
+
+**No emulator variant:** Firebase Emulator Suite has no FCM emulator.
 
 ## ModaalFirebaseRemoteConfig
 
@@ -129,14 +142,17 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `configSettings.fetchTimeout` | Escape hatch |
 | `setDefaults(fromPlist:)` | Escape hatch |
 | `ensureInitialized(completion:)` | Escape hatch |
+| `RemoteConfig.remoteConfig()` default instance | Wrapped (`FirebaseRemoteConfigWrapper.makeDefault()`) |
 
 **Escape hatch:** `FirebaseRemoteConfigWrapper.remoteConfig: RemoteConfig` (public)
+
+**No emulator variant:** Firebase Emulator Suite has no Remote Config emulator; use `setDefaults(_:)` for local testing.
 
 ## Combine Extension Layer
 
 Every completion-handler method has a corresponding Combine extension (protocol default implementation):
 
-- **39 `Future<T, Error>` methods** — one-shot operations (signIn, getDocument, delete, etc.)
+- **43 `Future<T, Error>` methods** — one-shot operations (signIn, getDocument, delete, etc.). Breakdown: Auth 16, Firestore 9, Cloud Storage 11, Messaging 4, Remote Config 3.
 - **4 streaming publishers** — `authStateDidChangePublisher()`, `snapshotPublisher()` (doc + query), `configUpdatePublisher()`
 
 Extensions are in `Sources/<Module>/Combine/` and work with any protocol conformer (wrappers and mocks).

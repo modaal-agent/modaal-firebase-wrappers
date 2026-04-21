@@ -9,8 +9,10 @@ Swift protocol wrappers for the Firebase iOS SDK. Inject the protocol, mock the 
 Firebase iOS SDK is concrete-class-based — no consumer-facing Swift protocols. This makes unit testing Firebase-dependent code impossible without hitting real services. ModaalFirebase wraps every Firebase service behind Swift protocols:
 
 ```swift
-// Production: inject the real wrapper
-let auth: FirebaseAuthProtocol = FirebaseAuthWrapper(auth: Auth.auth())
+import ModaalFirebaseAuth
+
+// Production: inject the real wrapper (no `import FirebaseAuth` required)
+let auth: FirebaseAuthProtocol = FirebaseAuthWrapper.makeDefault()
 
 // Unit test: inject a mock (generated or hand-written)
 let auth: FirebaseAuthProtocol = FirebaseAuthProtocolMock()
@@ -23,10 +25,10 @@ Your app code depends on the protocol, not the concrete class. In tests, a mock 
 | Module | Wraps | Protocols | Combine |
 |--------|-------|-----------|---------|
 | `ModaalFirebaseCore` | Bootstrap + shared types | `ModaalFirebase` class | — |
-| `ModaalFirebaseAuth` | Firebase Auth | 7 protocols (Auth, User, Credential, etc.) | 14 Future + 1 stream |
+| `ModaalFirebaseAuth` | Firebase Auth | 7 protocols (Auth, User, Credential, etc.) | 16 Future + 1 stream |
 | `ModaalFirebaseAnalytics` | Firebase Analytics | `FirebaseAnalyticsProtocol` | — (sync API) |
 | `ModaalFirebaseCrashlytics` | Firebase Crashlytics | `FirebaseCrashlyticsProtocol` | — (sync API) |
-| `ModaalFirestore` | Cloud Firestore | 12 protocols (Firestore, Document, Query, etc.) | 7 Future + 2 streams |
+| `ModaalFirestore` | Cloud Firestore | 12 protocols (Firestore, Document, Query, etc.) | 9 Future + 2 streams |
 | `ModaalCloudStorage` | Cloud Storage | 5 protocols + list result | 11 Future |
 | `ModaalFirebaseMessaging` | Cloud Messaging | `FirebaseMessagingProtocol` | 4 Future |
 | `ModaalFirebaseRemoteConfig` | Remote Config | 4 protocols (Config, Value, Listener, Update) | 3 Future + 1 stream |
@@ -56,6 +58,34 @@ Then add only the products you need:
 
 **Required:** Add the `-ObjC` linker flag to your app target. See [Getting Started](Docs/human/getting-started.md) for details.
 
+## Migrating from Firebase
+
+If you already know Firebase, ModaalFirebase is a drop-in substitute. Every service has a **`makeDefault()`** factory (or a `configure()` variant for Core) that wraps the Firebase SDK's default instance and hands you back a protocol — so **`import Firebase*` is not required in consumer code**. Swap the constructor, rebuild, done.
+
+| What you want | Standard Firebase | ModaalFirebase |
+|---|---|---|
+| Configure Firebase (plist in bundle) | `FirebaseApp.configure()` | `ModaalFirebase.shared.configure()` |
+| Configure Firebase (plist at path) | `FirebaseApp.configure(options: FirebaseOptions(contentsOfFile: path)!)` | `ModaalFirebase.shared.configure(plistPath: path)` |
+| Configure Firebase (in-code, no plist) | `FirebaseApp.configure(options: FirebaseOptions(googleAppID: …, gcmSenderID: …))` | `ModaalFirebase.shared.configure(options: ModaalFirebaseOptions(googleAppID: …, gcmSenderID: …))` |
+| Firestore instance | `Firestore.firestore()` | `FirestoreWrapper.makeDefault()` |
+| Firestore against emulator | `Firestore.firestore().settings = { host = "localhost:8080"; isSSLEnabled = false; cacheSettings = MemoryCacheSettings() }` | `FirestoreWrapper.makeDefault(emulator: (host: "localhost", port: 8080))` |
+| Auth instance | `Auth.auth()` | `FirebaseAuthWrapper.makeDefault()` |
+| Auth against emulator | `Auth.auth().useEmulator(withHost: "localhost", port: 9099)` | `FirebaseAuthWrapper.makeDefault(emulator: (host: "localhost", port: 9099))` |
+| Cloud Storage instance | `Storage.storage()` | `CloudStorageWrapper.makeDefault()` |
+| Cloud Storage against emulator | `Storage.storage().useEmulator(host: "localhost", port: 9199)` | `CloudStorageWrapper.makeDefault(emulator: (host: "localhost", port: 9199))` |
+| Analytics | `Analytics.logEvent(…)` (static methods on `Analytics`) | `FirebaseAnalyticsWrapper()` |
+| Crashlytics | `Crashlytics.crashlytics()` | `let c: FirebaseCrashlyticsProtocol = .makeDefault()` (protocol-level static factory) |
+| Messaging | `Messaging.messaging()` | `FirebaseMessagingWrapper.makeDefault()` |
+| Remote Config | `RemoteConfig.remoteConfig()` | `FirebaseRemoteConfigWrapper.makeDefault()` |
+
+Every wrapper hands back a protocol (`FirestoreProtocol` / `FirebaseAuthProtocol` / `FirebaseMessagingProtocol` / …) that mirrors the Firebase SDK's surface 1:1 — collection / document / query / batch / transaction / snapshot listener / … are all there.
+
+> **Why is Crashlytics different?** `Crashlytics` from the Firebase SDK conforms to `FirebaseCrashlyticsProtocol` directly (no wrapper class), so the factory lives on the protocol itself. Swift's protocol-static lookup requires an expected-type context, which is why the call reads `let c: FirebaseCrashlyticsProtocol = .makeDefault()` — the implicit-member form the compiler can dispatch.
+>
+> **Why no `makeDefault(emulator:)` on Messaging / Remote Config?** The Firebase Emulator Suite doesn't cover these services. Their `makeDefault()` wraps the default SDK instance; for local testing of Remote Config use `setDefaults(_:)`.
+>
+> **Need a non-default instance?** (custom `FirebaseApp`, a pre-configured instance, etc.) Construct via the wrapper's public `init(...)` directly — e.g. `FirestoreWrapper(firestore: Firestore.firestore(app: secondaryApp))`. That's the one path that still requires `import FirebaseFirestore` on an otherwise-fully-wrapped service.
+
 ## Usage
 
 ### Completion Handlers
@@ -63,7 +93,7 @@ Then add only the products you need:
 ```swift
 import ModaalFirestore
 
-let db: FirestoreProtocol = FirestoreWrapper(firestore: Firestore.firestore())
+let db: FirestoreProtocol = FirestoreWrapper.makeDefault()
 
 db.collection("users").document("alice").getDocument { result in
   switch result {
@@ -115,13 +145,18 @@ Every entry-point wrapper exposes the underlying Firebase type for APIs not yet 
 ```swift
 import FirebaseFirestore  // explicit opt-in
 
-let wrapper = FirestoreWrapper(firestore: Firestore.firestore())
+let wrapper = FirestoreWrapper.makeDefault()
 wrapper.firestore.settings.isPersistenceEnabled = false  // escape hatch
 ```
+
+### Firebase Emulator
+
+`FirestoreWrapper`, `FirebaseAuthWrapper`, and `CloudStorageWrapper` each expose a `makeDefault(emulator:)` factory that wraps the default SDK instance and points it at a local emulator — no `import Firebase*` required in your app. Combined with in-code configuration (`ModaalFirebase.configure(options:)` + `ModaalFirebaseOptions`), a full emulator-backed bootstrap fits in a handful of lines. See [Emulator setup](Docs/human/emulator-setup.md).
 
 ## Documentation
 
 - [Getting Started](Docs/human/getting-started.md) — Installation, bootstrap, usage examples
+- [Emulator Setup](Docs/human/emulator-setup.md) — Running against the Firebase Emulator Suite
 - [Architecture](Docs/human/architecture.md) — Why this library exists, module structure, wrapper patterns
 - [Contributing](CONTRIBUTING.md) — Development rules, code style, how to add a new service
 

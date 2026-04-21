@@ -51,6 +51,10 @@ Sources/ModaalFirebaseDatabase/
 - Sub-wrappers: `internal final class`
 - Follow the `FirebaseAuthWrapper` template as the canonical example
 - Use force-cast (`as!`) for protocol-to-concrete bridging in sub-wrappers
+- **Every new wrapper ships a `makeDefault()` static factory** so consumers don't need `import Firebase*` at the construction site. Three shapes, pick the one matching the service:
+  - Service with a Firebase Emulator (Firestore / Auth / Storage pattern): `public static func makeDefault(emulator: (host: String, port: Int)? = nil) -> MyWrapper` — wire emulator settings when the tuple is non-nil. See `FirestoreWrapper.makeDefault`.
+  - Service without a Firebase Emulator (Messaging / Remote Config pattern): `public static func makeDefault() -> MyWrapper` — no tuple parameter. See `FirebaseMessagingWrapper.makeDefault`.
+  - Direct-conformance service (Crashlytics pattern): factory lives on the protocol with `where Self == ConcreteFirebaseType` constraint, returning `Self`. Consumers call via implicit-member syntax: `let x: MyProtocol = .makeDefault()`. See `FirebaseCrashlyticsExtensions.swift`.
 
 ### 5. Add Combine extensions
 
@@ -83,6 +87,7 @@ Sources/ModaalFirebaseDatabase/
 - [ ] Package.swift updated (product + target)
 - [ ] Protocol(s) defined — no raw Firebase types, no Combine imports
 - [ ] Wrapper(s) implemented — escape hatch on entry-point wrapper
+- [ ] `makeDefault()` factory added (with `emulator:` overload if the service supports a Firebase Emulator; or on the protocol with `where Self == …` for direct-conformance services)
 - [ ] Combine extensions added
 - [ ] Mirrored types created (if any Firebase enums appear in the protocol surface)
 - [ ] SampleApp usage file — 100% method/property/enum coverage + Combine

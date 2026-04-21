@@ -44,6 +44,35 @@
    extension FirebaseCrashlytics.Crashlytics: FirebaseCrashlyticsProtocol {}
    ```
 
+6. **Static `makeDefault()` factory** on every entry-point wrapper — mandatory, not optional. Saves consumers from `import Firebase*` at the construction site.
+
+   **Services with an emulator** (Firestore, Auth, Cloud Storage) also take an optional `emulator: (host: String, port: Int)?` tuple:
+   ```swift
+   public static func makeDefault(emulator: (host: String, port: Int)? = nil) -> MyServiceWrapper {
+     let sdk = MyService.myService()
+     if let emulator {
+       sdk.useEmulator(withHost: emulator.host, port: emulator.port)
+     }
+     return MyServiceWrapper(sdk: sdk)
+   }
+   ```
+   **Services without an emulator** (Messaging, Remote Config) have a bare factory — no tuple parameter:
+   ```swift
+   public static func makeDefault() -> MyServiceWrapper {
+     MyServiceWrapper(sdk: MyService.myService())
+   }
+   ```
+   **Direct-conformance services** (Crashlytics) put the factory on the protocol with a `where Self == ConcreteFirebaseType` constraint, returning `Self`. Consumers call it via implicit-member syntax:
+   ```swift
+   public extension FirebaseCrashlyticsProtocol where Self == FirebaseCrashlytics.Crashlytics {
+     static func makeDefault() -> Self { Crashlytics.crashlytics() }
+   }
+   // Call site:
+   let crashlytics: FirebaseCrashlyticsProtocol = .makeDefault()
+   ```
+
+   Wrapper-class factories live on the concrete class (not the protocol) so existing `Sourcery`-generated mocks in `ModaalFirebaseMocks` aren't invalidated. The emulator tuple is deliberately compact; promote to a dedicated options struct only if it grows beyond `host` + `port`.
+
 ## Type Conversions
 
 Internal extensions on Modaal types convert to Firebase SDK types:

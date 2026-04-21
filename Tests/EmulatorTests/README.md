@@ -1,13 +1,18 @@
 # EmulatorTests
 
-XcodeGen-managed project that hosts the Firebase Emulator–backed test targets:
+XcodeGen-managed project that hosts the Firebase Emulator–backed tests.
 
-- `ModaalFirebaseSmokeTests` — one per wrapper family
-- `ModaalFirebaseIntegrationTests` — per-service round-trips
+The two test source sets live alongside the SPM tests:
 
-Both are regular **unit-test bundles hosted by `EmulatorTestHost.app`**. This is required because Firebase's initializers reach into LaunchServices (`+[LSApplicationProxy bundleProxyForCurrentProcess]`) at startup; running inside a bare xctest bundle raises `NSInternalInconsistencyException: bundleProxyForCurrentProcess is nil`. SPM has no notion of test-host apps, hence this separate project.
+- `Tests/ModaalFirebaseSmokeTests/` — one minimal round-trip per wrapper family.
+- `Tests/ModaalFirebaseIntegrationTests/` — per-service round-trips (Firestore / Auth / Cloud Storage / Remote Config) through the public protocol surface.
 
-Sources live alongside the SPM tests at `Tests/ModaalFirebaseSmokeTests/` and `Tests/ModaalFirebaseIntegrationTests/`; this XcodeGen project references them by relative path. The shared harness at `Shared/EmulatorHarness.swift` is included in both test target source sets and is the single place that imports Firebase SDK types.
+Both source sets compile into a **single** XcodeGen target, `ModaalFirebaseEmulatorTests`, hosted by `EmulatorTestHost.app`. Two reasons for the hosted-app + combined-bundle layout:
+
+1. Firebase's initializers reach into LaunchServices (`+[LSApplicationProxy bundleProxyForCurrentProcess]`) at startup; running inside a bare xctest bundle raises `NSInternalInconsistencyException: bundleProxyForCurrentProcess is nil`. SPM has no notion of a test-host app, hence this separate project.
+2. Splitting smoke vs. integration into two bundles would double-link the Firebase static xcframeworks into the host + each bundle. Keeping them combined sidesteps the conflict. Tests are distinguished by class-name convention (`FirebaseXxxSmokeTests` vs. `XxxIntegrationTests`).
+
+The shared harness at `Shared/EmulatorHarness.swift` has zero `import Firebase*` — all Firebase configuration happens in `EmulatorTestHost/EmulatorTestHostApp.swift` via `ModaalFirebase.configure(options:)` + `makeDefault(emulator:)` factories.
 
 ## Run
 
@@ -17,4 +22,4 @@ Use the script:
 bash scripts/run-integration-tests.sh
 ```
 
-It generates this project, starts the emulator, runs both test targets, and tears down on exit.
+It installs prerequisites, generates this project, starts the emulator, runs the combined target, and tears the emulator down on exit.
