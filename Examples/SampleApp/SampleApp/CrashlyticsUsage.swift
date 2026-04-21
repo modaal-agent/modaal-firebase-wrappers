@@ -23,3 +23,9 @@ func exerciseCrashlytics(_ crashlytics: FirebaseCrashlyticsProtocol) {
   )
   crashlytics.record(error: NSError(domain: "com.example", code: -2), userInfo: nil)
 }
+
+/// Exercises the protocol-level static factory (no `import FirebaseCrashlytics`
+/// needed at the call site). Compile-only check, never invoked.
+func exerciseCrashlyticsMakeDefault() {
+  let _: FirebaseCrashlyticsProtocol = .makeDefault()
+}

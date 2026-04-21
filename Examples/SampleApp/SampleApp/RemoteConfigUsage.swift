@@ -121,4 +121,7 @@ func exerciseRemoteConfigCombine(_ config: FirebaseRemoteConfigProtocol) {
 /// Exercises wrapper construction (proves the concrete type compiles).
 func exerciseRemoteConfigWrapperInstantiation() {
   let _: FirebaseRemoteConfigWrapper.Type = FirebaseRemoteConfigWrapper.self
+
+  // Static factory — compile-only check, never invoked.
+  let _: (() -> FirebaseRemoteConfigWrapper) = { FirebaseRemoteConfigWrapper.makeDefault() }
 }

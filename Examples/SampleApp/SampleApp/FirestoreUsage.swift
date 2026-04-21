@@ -444,4 +444,8 @@ func exerciseAggregateQueryCombine(_ query: AggregateQueryProtocol) {
 /// Exercises wrapper construction (proves the concrete type compiles).
 func exerciseFirestoreWrapperInstantiation() {
   let _: FirestoreWrapper.Type = FirestoreWrapper.self
+
+  // Static factories — compile-only check, never invoked.
+  let _: (() -> FirestoreWrapper) = { FirestoreWrapper.makeDefault() }
+  let _: (((host: String, port: Int)) -> FirestoreWrapper) = { FirestoreWrapper.makeDefault(emulator: $0) }
 }

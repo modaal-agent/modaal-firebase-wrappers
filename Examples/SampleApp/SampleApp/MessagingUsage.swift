@@ -69,4 +69,7 @@ func exerciseMessagingCombine(_ messaging: FirebaseMessagingProtocol) {
 /// Exercises wrapper construction (proves the concrete type compiles).
 func exerciseMessagingWrapperInstantiation() {
   let _: FirebaseMessagingWrapper.Type = FirebaseMessagingWrapper.self
+
+  // Static factory — compile-only check, never invoked.
+  let _: (() -> FirebaseMessagingWrapper) = { FirebaseMessagingWrapper.makeDefault() }
 }

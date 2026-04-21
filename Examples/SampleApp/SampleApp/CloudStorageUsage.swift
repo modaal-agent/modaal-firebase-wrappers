@@ -180,4 +180,8 @@ func exerciseCollectionStoringCombine(_ collection: CloudCollectionStoring) {
 /// Exercises wrapper construction (proves the concrete type compiles).
 func exerciseCloudStorageWrapperInstantiation() {
   let _: CloudStorageWrapper.Type = CloudStorageWrapper.self
+
+  // Static factories — compile-only check, never invoked.
+  let _: (() -> CloudStorageWrapper) = { CloudStorageWrapper.makeDefault() }
+  let _: (((host: String, port: Int)) -> CloudStorageWrapper) = { CloudStorageWrapper.makeDefault(emulator: $0) }
 }

@@ -12,14 +12,14 @@ Each `…Usage.swift` file imports one ModaalFirebase module and calls every pro
 
 | File | Covers |
 |---|---|
-| `CoreUsage.swift` | `ModaalFirebase.configure()` variants + `ModaalFirebaseOptions` |
-| `AuthUsage.swift` | `FirebaseAuthProtocol`, `FirebaseUserProtocol`, credentials, state listeners |
-| `FirestoreUsage.swift` | `FirestoreProtocol`, collection/document/query/batch/transaction, snapshot listeners |
-| `CloudStorageUsage.swift` | `CloudStorageProtocol`, upload/download/metadata/list |
+| `CoreUsage.swift` | `ModaalFirebase.configure()` / `configure(plistPath:)` / `configure(options:)` + `ModaalFirebaseOptions` + `FirAppOptions` |
+| `AuthUsage.swift` | `FirebaseAuthProtocol`, `FirebaseUserProtocol`, credentials, state listeners, `FirebaseAuthWrapper.makeDefault(emulator:)` |
+| `FirestoreUsage.swift` | `FirestoreProtocol`, collection/document/query/batch/transaction, snapshot listeners, `FirestoreWrapper.makeDefault(emulator:)` |
+| `CloudStorageUsage.swift` | `CloudStorageProtocol`, upload/download/metadata/list, `CloudStorageWrapper.makeDefault(emulator:)` |
 | `AnalyticsUsage.swift` | `FirebaseAnalyticsProtocol` |
-| `CrashlyticsUsage.swift` | `FirebaseCrashlyticsProtocol` (extension conformance on `Crashlytics`) |
-| `MessagingUsage.swift` | `FirebaseMessagingProtocol` + FCM token flows |
-| `RemoteConfigUsage.swift` | `FirebaseRemoteConfigProtocol`, `RemoteConfigValueProtocol` |
+| `CrashlyticsUsage.swift` | `FirebaseCrashlyticsProtocol` (extension conformance on `Crashlytics`) + `FirebaseCrashlyticsProtocol.makeDefault()` |
+| `MessagingUsage.swift` | `FirebaseMessagingProtocol` + FCM token flows + `FirebaseMessagingWrapper.makeDefault()` |
+| `RemoteConfigUsage.swift` | `FirebaseRemoteConfigProtocol`, `RemoteConfigValueProtocol` + `FirebaseRemoteConfigWrapper.makeDefault()` |
 
 ## Regenerate / build manually
 

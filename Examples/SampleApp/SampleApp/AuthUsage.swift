@@ -215,4 +215,8 @@ func exerciseAuthWrapperInstantiation() {
   // FirebaseAuthWrapper requires Auth.auth() which needs FirebaseApp.configure() —
   // can't call at compile-check time, but the type reference compiles.
   let _: FirebaseAuthWrapper.Type = FirebaseAuthWrapper.self
+
+  // Static factories — compile-only check, never invoked.
+  let _: (() -> FirebaseAuthWrapper) = { FirebaseAuthWrapper.makeDefault() }
+  let _: (((host: String, port: Int)) -> FirebaseAuthWrapper) = { FirebaseAuthWrapper.makeDefault(emulator: $0) }
 }
