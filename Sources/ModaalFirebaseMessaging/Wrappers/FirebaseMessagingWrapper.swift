@@ -12,6 +12,15 @@ public final class FirebaseMessagingWrapper: FirebaseMessagingProtocol {
     self.messaging = messaging
   }
 
+  /// Build a wrapper around the default `Messaging.messaging()` instance.
+  ///
+  /// Saves consumers from having to `import FirebaseMessaging` at the
+  /// construction site. No emulator variant — the Firebase Emulator Suite
+  /// has no FCM emulator.
+  public static func makeDefault() -> FirebaseMessagingWrapper {
+    FirebaseMessagingWrapper(messaging: Messaging.messaging())
+  }
+
   // MARK: - FirebaseMessagingProtocol
 
   public var fcmToken: String? { messaging.fcmToken }

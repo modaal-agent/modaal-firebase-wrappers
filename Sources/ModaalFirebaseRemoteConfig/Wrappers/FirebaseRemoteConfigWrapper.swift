@@ -12,6 +12,15 @@ public final class FirebaseRemoteConfigWrapper: FirebaseRemoteConfigProtocol {
     self.remoteConfig = remoteConfig
   }
 
+  /// Build a wrapper around the default `RemoteConfig.remoteConfig()` instance.
+  ///
+  /// Saves consumers from having to `import FirebaseRemoteConfig` at the
+  /// construction site. No emulator variant — the Firebase Emulator Suite
+  /// has no Remote Config emulator; use `setDefaults(_:)` for local testing.
+  public static func makeDefault() -> FirebaseRemoteConfigWrapper {
+    FirebaseRemoteConfigWrapper(remoteConfig: RemoteConfig.remoteConfig())
+  }
+
   // MARK: - FirebaseRemoteConfigProtocol
 
   public var minimumFetchInterval: TimeInterval {
