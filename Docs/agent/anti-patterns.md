@@ -37,3 +37,15 @@
 - **Never add Combine methods as protocol requirements.** They are protocol extensions (default implementations). Adding them as requirements would force every mock to implement them.
 
 - **Never use `Deferred` in Combine extensions.** `Future` is intentionally eager (starts on creation, not subscription) — matching FirebaseCombineSwift behavior. The completion-handler method is called immediately.
+
+## Consumer-Side (App Code Using This Library)
+
+The rules above govern the wrapper library itself. The rules in this section apply to **app code that consumes this library** — they are the most common ways a migration to `modaal-firebase-wrappers` goes wrong.
+
+- **Do not re-host this library behind a local consumer-side facade.** If your app today has a `FirAppConfiguring`-style god-object that returns raw Firebase types (`CollectionReference`, `DocumentReference`, `StorageReference`), the migration to `modaal-firebase-wrappers` *deletes* that facade — it does not rebuild it on top of these wrappers. Inject per-service wrapper protocols (`FirestoreProtocol`, `CloudStorageProtocol`, `FirebaseAuthProtocol`, etc.) at your composition root and pass them through the dependency graph. A facade re-hosting still leaks raw Firebase types into your app and defeats the testability and decoupling this library was built to provide.
+
+- **Do not add a direct SPM dependency on `firebase-ios-sdk` or `firebase-ios-sdk-xcframeworks` "for raw types used in app code".** This library transitively pulls in `firebase-ios-sdk-xcframeworks` at the version it was built against; a second direct pin causes duplicate-XCFramework link errors when the two diverge. Prefer wrapping the missing API or filing a coverage gap against [`coverage.md`](coverage.md) over adding a parallel SDK dependency.
+
+- **Do not `import FirebaseFirestore` / `import FirebaseAuth` / `import FirebaseStorage` / `import FirebaseMessaging` in app code outside the composition root.** Use `import ModaalFirestore` / `import ModaalFirebaseAuth` / `import ModaalCloudStorage` / `import ModaalFirebaseMessaging`. The wrapper-protocol types live in the `Modaal*` modules; raw Firebase imports indicate either a missed migration site or an escape-hatch leak.
+
+- **Do use the escape hatch (`firestore.firestore`, `cloudStorage.storage`, etc.) only at the single call site that needs the raw type** — with a local `import FirebaseFirestore` (or whichever module) in *that file only*, never project-wide. Each escape-hatch use is a coverage gap; consider filing one against [`coverage.md`](coverage.md).

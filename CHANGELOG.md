@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.1] — 2026-04-25
+
+### Documentation
+- **Consumer-side anti-patterns** — new section in [`Docs/agent/anti-patterns.md`](Docs/agent/anti-patterns.md) covering the most common ways a migration to `modaal-firebase-wrappers` goes wrong: re-hosting the library behind a local facade that returns raw Firebase types, adding a parallel direct SPM dependency on `firebase-ios-sdk` / `firebase-ios-sdk-xcframeworks`, importing `FirebaseFirestore` / `FirebaseAuth` / `FirebaseStorage` / `FirebaseMessaging` outside the composition root, and over-using the escape hatch.
+
 ## [1.2.0] — 2026-04-21
 
 ### Added
