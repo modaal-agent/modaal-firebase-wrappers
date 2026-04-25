@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.2.2] — 2026-04-25
+
+### Documentation
+- **Coverage gap: Google Sign-In** — new `ModaalGoogleSignIn (not yet wrapped)` section in [`Docs/agent/coverage.md`](Docs/agent/coverage.md) documenting the unwrapped `GIDSignIn` surface, the re-exported `GoogleSignIn` library product, the already-wrapped `GoogleAuthProvider.credential(...)` bridge, and links to interim consumer guidance and the roadmap entry in the Modaal repo.
+
 ## [1.2.1] — 2026-04-25
 
 ### Documentation

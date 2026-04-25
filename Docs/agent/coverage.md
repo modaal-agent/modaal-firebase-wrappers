@@ -148,6 +148,24 @@ No escape hatch needed — Core is a thin bootstrap layer.
 
 **No emulator variant:** Firebase Emulator Suite has no Remote Config emulator; use `setDefaults(_:)` for local testing.
 
+## ModaalGoogleSignIn (not yet wrapped)
+
+Google Sign-In's iOS SDK (`GIDSignIn`) is **not yet wrapped**. The `firebase-ios-sdk-xcframeworks` package re-exports the `GoogleSignIn` library product (binary XCFramework, resources self-contained); consumers add it directly until a `ModaalGoogleSignIn` module ships.
+
+| API | Status |
+|-----|--------|
+| `GIDSignIn.sharedInstance.signIn(withPresenting:)` | Not yet wrapped — consume `GoogleSignIn` directly |
+| `GIDSignIn.sharedInstance.handle(_ url:)` | Not yet wrapped |
+| `GIDSignIn.sharedInstance.restorePreviousSignIn(completion:)` | Not yet wrapped |
+| `GIDSignIn.sharedInstance.disconnect(completion:)` | Not yet wrapped |
+| `GIDConfiguration(clientID:)` | Not yet wrapped |
+| `GIDSignInResult.user.idToken` / `.accessToken` | Not yet wrapped |
+| `GoogleAuthProvider.credential(withIDToken:accessToken:)` | Wrapped (re-exported from `ModaalFirebaseAuth`) — feed the credential to `auth.signIn(with:)` |
+
+**Interim consumer guidance** (Modaal repo): [`integrations-firebase.md#google-signin-interim`](https://github.com/modaal-agent/modaal-agent/blob/main/resources/knowledge/integrations-firebase.md#google-signin-interim).
+
+**Roadmap entry** (Modaal repo): [`firebase-shared-wrapper-followup-GoogleSignIn.md`](https://github.com/modaal-agent/modaal-agent/blob/main/specs/066-integrations-firebase/firebase-shared-wrapper-followup-GoogleSignIn.md).
+
 ## Combine Extension Layer
 
 Every completion-handler method has a corresponding Combine extension (protocol default implementation):
