@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.1] — 2026-04-27
+
+### Changed
+
+- **`Docs/agent/*.md` and `Docs/human/*.md` reoriented to consumer focus.** Both documentation trees now exclusively cover *consuming* the library; library-implementation patterns, library-side anti-patterns, and the step-by-step guide for adding a new wrapper move to `CONTRIBUTING.md`.
+- **`Docs/agent/adding-a-wrapper.md` deleted** — content fully absorbed into `CONTRIBUTING.md § Adding a New Firebase Service Wrapper`.
+- **Deprecated direct-init pattern for default instances** — `FirestoreWrapper(firestore: Firestore.firestore())` (and equivalents for Auth / Cloud Storage / Messaging / Remote Config) is now formally deprecated in the docs; use `Wrapper.makeDefault()` / `Wrapper.makeDefault(emulator:)` instead. The direct `init(...)` form remains `public` and documented as the escape hatch for non-default `FirebaseApp` instances only. Surfaced as an explicit antipattern in `Docs/agent/anti-patterns.md § Construction`.
+
+No source/protocol/mock changes. Patch bump.
+
 ## [1.4.0] — 2026-04-26
 
 ### Added
