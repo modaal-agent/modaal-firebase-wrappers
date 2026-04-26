@@ -1,20 +1,19 @@
-# Agent Documentation — ModaalFirebase
+# Agent Documentation — Using ModaalFirebase
 
-This directory contains documentation for AI agents working on the ModaalFirebase wrapper library.
+This directory is for AI agents writing **app code that consumes ModaalFirebase**. It mirrors the human-facing docs under [`Docs/human/`](../human/) but is dense and rule-shaped — formatted for an agent's read-once pass.
+
+For contributing to the wrapper library itself, see [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
 
 ## Contents
 
-- [coverage.md](coverage.md) — Per-module coverage audit: what's wrapped, what's accessible via escape hatch, what's not covered
-- [patterns.md](patterns.md) — Wrapper implementation patterns (protocol design, wrapper classes, type conversions, Combine extensions)
-- [anti-patterns.md](anti-patterns.md) — What NOT to do when working on this library
-- [adding-a-wrapper.md](adding-a-wrapper.md) — Step-by-step guide for adding a new Firebase service wrapper
+- [coverage.md](coverage.md) — Per-module API coverage: what's wrapped, what's accessible via the public escape hatch, what's not yet covered. The first thing to consult when picking a Firebase API.
+- [patterns.md](patterns.md) — Consumption patterns: which API form to use at the call site, how the two-tier surface works, when to prefer the Combine layer, snapshot-iteration typing, escape-hatch usage.
+- [anti-patterns.md](anti-patterns.md) — Consumer-side mistakes that defeat the library's value (re-hosting behind a facade, importing raw Firebase outside the composition root, mixing real wrappers with mocks, etc.).
 
 ## Quick Reference
 
-- **Package name:** `ModaalFirebase`
-- **Repo:** `modaal-firebase-wrappers`
-- **Firebase SDK:** `akaffenberger/firebase-ios-sdk-xcframeworks` from `"12.12.0"` (binary xcframeworks, not source)
-- **SPM package identity:** `firebase-ios-sdk-xcframeworks` (URL-derived)
+- **Package:** `https://github.com/modaal-agent/modaal-firebase-wrappers.git`
+- **Minimum version:** `1.4.0`
 - **Platform:** iOS 15+, Swift tools 5.9
-- **Build:** `./scripts/build.sh` (builds library + SampleApp + tests)
-- **8 modules:** Core, Auth, Analytics, Crashlytics, Firestore, CloudStorage, Messaging, RemoteConfig
+- **8 modules:** `ModaalFirebaseCore`, `ModaalFirebaseAuth`, `ModaalFirebaseAnalytics`, `ModaalFirebaseCrashlytics`, `ModaalFirestore`, `ModaalCloudStorage`, `ModaalFirebaseMessaging`, `ModaalFirebaseRemoteConfig`
+- **Construction:** every entry-point wrapper exposes `Wrapper.makeDefault()` (some with an optional `emulator: (host: String, port: Int)?` overload). Consumer code never needs `import Firebase*` for default-instance construction.

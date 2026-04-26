@@ -1,55 +1,41 @@
-# Anti-Patterns — What NOT to Do
+# Consumer-Side Anti-Patterns
 
-## Protocol Design
+What NOT to do in app code that consumes ModaalFirebase. These are the most common ways a migration to `modaal-firebase-wrappers` goes wrong.
 
-- **Never expose raw Firebase types in protocol surfaces.** No `CollectionReference`, `DocumentSnapshot`, `StorageReference` etc. in protocol method signatures. Always use the corresponding wrapper protocol. This is a review-blocker.
+For library-development anti-patterns (how *not* to build the wrappers themselves), see [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
 
-- **Never add `import Firebase*` to protocol files.** Protocol definitions must be Firebase-free. Only wrapper implementation files import Firebase.
+## Construction
 
-- **Never add `import Combine` to protocol files.** Combine extensions live in separate `Combine/` directory files, not in protocol definitions.
+- **Do not construct entry-point wrappers directly via `init(...)` for default instances.** Use `Wrapper.makeDefault()` (or `Wrapper.makeDefault(emulator:)` against the Firebase Emulator). The direct `init` form requires `import Firebase*` at the call site and defeats the point of the wrapper:
 
-- **Never add Sourcery/Mockable annotations.** Mock generation tooling is TBD. Don't add `/// sourcery: CreateMock`, `@Mockable`, or similar annotations. The chosen tool will add its own.
+  ```swift
+  // ❌ Deprecated — requires `import FirebaseFirestore`
+  let db: FirestoreProtocol = FirestoreWrapper(firestore: Firestore.firestore())
 
-- **Never declare wrapper-idiomatic methods on the *protocol* that diverge from Firebase iOS SDK signatures.** The protocol layer is 1:1 with `firebase-ios-sdk` (modulo the documented safety carve-outs). Swift-idiomatic ergonomic forms — `MergeOption` enum, labeled `child(path:)`, `getDownloadURL` aliased over `downloadURL`, `canHandleOpenUrl` aliased over `canHandle`, etc. — belong in protocol *extensions* under `Sources/<Module>/Extensions/`, where they delegate to the canonical Firebase-shaped protocol method. See [patterns.md § Two-tier API surface](patterns.md#two-tier-api-surface). Wrapper-style aliases declared on the protocol get reverted in code review.
+  // ✅ Standard
+  let db: FirestoreProtocol = FirestoreWrapper.makeDefault()
+  ```
 
-## Wrapper Implementation
+  The `init(...)` form remains `public` only for the rare non-default-instance case (custom `FirebaseApp`, pre-configured handle); confine it to the composition root and prefer `makeDefault()` everywhere else.
 
-- **Never create umbrella facades.** No `ModaalFirebase.auth`, `ModaalFirebase.firestore` etc. Each module is independent. Consumers compose what they need.
-
-- **Never port RIBs-specific code.** Workers, Interactors, `Working` protocols — these stay in the consumer app. This library is architecture-agnostic.
-
-- **Never add the `-ObjC` linker flag to the library.** This is the consumer app's responsibility. Document it in getting-started.md instead.
-
-- **Never swallow errors silently.** Always propagate errors through `Result.failure` or `completion(.failure(...))`. Use `NSError(domain: "Unknown error", code: -1)` only as a last resort when Firebase returns nil for both result and error.
-
-## Dependencies
-
-- **Never depend on `FirebaseCore` directly.** The xcframeworks package doesn't expose it as a standalone product. `ModaalFirebaseCore` depends on `FirebaseAnalytics` (which bundles `_FirebaseCore` internally).
-
-- **Never use the internal package name `"Firebase"` in SPM.** SPM 5.9 uses URL-derived identity: `"firebase-ios-sdk-xcframeworks"`.
-
-## Testing & Verification
-
-- **Never ship a module without SampleApp coverage.** Every protocol method must be exercised in `Examples/SampleApp/SampleApp/<Module>Usage.swift`.
-
-- **Never skip `./scripts/build.sh`.** It builds library targets, SampleApp, and tests. A module isn't done until this passes.
-
-## Combine Layer
-
-- **Never add Combine methods as protocol requirements.** They are protocol extensions (default implementations). Adding them as requirements would force every mock to implement them.
-
-- **Never use `Deferred` in Combine extensions.** `Future` is intentionally eager (starts on creation, not subscription) — matching FirebaseCombineSwift behavior. The completion-handler method is called immediately.
-
-## Consumer-Side (App Code Using This Library)
-
-The rules above govern the wrapper library itself. The rules in this section apply to **app code that consumes this library** — they are the most common ways a migration to `modaal-firebase-wrappers` goes wrong.
+## Architecture
 
 - **Do not re-host this library behind a local consumer-side facade.** If your app today has a `FirAppConfiguring`-style god-object that returns raw Firebase types (`CollectionReference`, `DocumentReference`, `StorageReference`), the migration to `modaal-firebase-wrappers` *deletes* that facade — it does not rebuild it on top of these wrappers. Inject per-service wrapper protocols (`FirestoreProtocol`, `CloudStorageProtocol`, `FirebaseAuthProtocol`, etc.) at your composition root and pass them through the dependency graph. A facade re-hosting still leaks raw Firebase types into your app and defeats the testability and decoupling this library was built to provide.
 
+## Dependencies
+
 - **Do not add a direct SPM dependency on `firebase-ios-sdk` or `firebase-ios-sdk-xcframeworks` "for raw types used in app code".** This library transitively pulls in `firebase-ios-sdk-xcframeworks` at the version it was built against; a second direct pin causes duplicate-XCFramework link errors when the two diverge. Prefer wrapping the missing API or filing a coverage gap against [`coverage.md`](coverage.md) over adding a parallel SDK dependency.
 
-- **Do not `import FirebaseFirestore` / `import FirebaseAuth` / `import FirebaseStorage` / `import FirebaseMessaging` in app code outside the composition root.** Use `import ModaalFirestore` / `import ModaalFirebaseAuth` / `import ModaalCloudStorage` / `import ModaalFirebaseMessaging`. The wrapper-protocol types live in the `Modaal*` modules; raw Firebase imports indicate either a missed migration site or an escape-hatch leak.
+## Imports
 
-- **Do use the escape hatch (`firestore.firestore`, `cloudStorage.storage`, etc.) only at the single call site that needs the raw type** — with a local `import FirebaseFirestore` (or whichever module) in *that file only*, never project-wide. Each escape-hatch use is a coverage gap; consider filing one against [`coverage.md`](coverage.md).
+- **Do not `import FirebaseFirestore` / `import FirebaseAuth` / `import FirebaseStorage` / `import FirebaseMessaging` in app code outside the composition root.** Use `import ModaalFirestore` / `import ModaalFirebaseAuth` / `import ModaalCloudStorage` / `import ModaalFirebaseMessaging`. The wrapper-protocol types live in the `Modaal*` modules; raw Firebase imports outside the composition root indicate either a missed migration site or an escape-hatch leak.
 
-- **Do not mix real entry-point wrappers with mocked sub-protocols in tests.** Mocks compose with mocks; wrappers compose with wrappers. The wrappers' protocol-to-concrete bridging uses `as!` force-casts internally (see [patterns.md "Wrapper Classes" #4](patterns.md)) — this is safe in production because only our wrappers implement these protocols. Passing a `DocumentReferenceProtocolMock` (or `FirebaseUserProtocolMock`, etc.) into a real `WriteBatchWrapper` / `TransactionWrapper` / `FirebaseAuthWrapper` method that expects a sub-protocol triggers an `as!` failure inside the wrapper at runtime. If you want a transactional/batched/auth-mutating test, mock the *entry-point* protocol (`WriteBatchProtocol`, `TransactionProtocol`, `FirebaseAuthProtocol`) directly — never an intermediate.
+## Escape Hatch
+
+- **Use the escape hatch (`firestore.firestore`, `cloudStorage.storage`, etc.) only at the single call site that needs the raw type** — with a local `import FirebaseFirestore` (or whichever module) in *that file only*, never project-wide. Each escape-hatch use is a coverage gap; consider filing one against [`coverage.md`](coverage.md).
+
+## Testing
+
+- **Do not mix real entry-point wrappers with mocked sub-protocols in tests.** Mocks compose with mocks; wrappers compose with wrappers. The wrappers' protocol-to-concrete bridging uses `as!` force-casts internally — safe in production because only our wrappers implement these protocols. Passing a `DocumentReferenceProtocolMock` (or `FirebaseUserProtocolMock`, etc.) into a real `WriteBatchWrapper` / `TransactionWrapper` / `FirebaseAuthWrapper` method that expects a sub-protocol triggers an `as!` failure inside the wrapper at runtime. If you want a transactional / batched / auth-mutating test, mock the *entry-point* protocol (`WriteBatchProtocol`, `TransactionProtocol`, `FirebaseAuthProtocol`) directly — never an intermediate.
+
+- **Do not roll a hand-written conformer to a generated mock protocol.** `ModaalFirebaseMocks` ships Sourcery-generated mocks for every protocol. If a generated mock's shape feels awkward (init parameters, missing convenience), use the helper `static func make(...)` factories in `Sources/ModaalFirebaseMocks/Helpers/` (reachable via `@testable import ModaalFirebaseMocks`) — or file an issue against the wrapper repo for a new helper. Don't substitute hand-written conformers; that breaks composition guarantees and drifts from the canonical protocol surface as it evolves.

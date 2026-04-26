@@ -84,7 +84,7 @@ Every wrapper hands back a protocol (`FirestoreProtocol` / `FirebaseAuthProtocol
 >
 > **Why no `makeDefault(emulator:)` on Messaging / Remote Config?** The Firebase Emulator Suite doesn't cover these services. Their `makeDefault()` wraps the default SDK instance; for local testing of Remote Config use `setDefaults(_:)`.
 >
-> **Need a non-default instance?** (custom `FirebaseApp`, a pre-configured instance, etc.) Construct via the wrapper's public `init(...)` directly — e.g. `FirestoreWrapper(firestore: Firestore.firestore(app: secondaryApp))`. That's the one path that still requires `import FirebaseFirestore` on an otherwise-fully-wrapped service.
+> **Need a non-default instance?** (custom `FirebaseApp`, a pre-configured instance, etc.) Construct via the wrapper's public `init(...)` directly — e.g. `FirestoreWrapper(firestore: Firestore.firestore(app: secondaryApp))`. That's the one path that still requires `import FirebaseFirestore`, and only at the composition root. Use `makeDefault()` / `makeDefault(emulator:)` everywhere else; the direct `init(...)` form is not the standard pattern for default-instance construction.
 
 ## Usage
 

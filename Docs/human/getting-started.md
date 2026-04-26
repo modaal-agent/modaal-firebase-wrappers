@@ -88,13 +88,12 @@ Already using the Firebase SDK? Every service has a **`makeDefault()`** factory 
 | OIDC / generic OAuth credential (Microsoft, Yahoo, custom OIDC) | `OAuthProvider.credential(providerID: .custom("oidc.my-provider"), idToken: …, rawNonce: …, accessToken: …)` | Escape hatch — `import FirebaseAuth` at the credential-construction call site only; not yet wrapped (would need a `ModaalAuthProviderID` enum). |
 | Firestore `Timestamp` (write payload) | `Timestamp(date: …)` (requires `import FirebaseFirestore`) | `Timestamp(date: …)` (re-exported under `import ModaalFirestore`) |
 | Firestore `FieldValue` (write helpers) | `FieldValue.serverTimestamp() / .delete() / .arrayUnion(_:) / .arrayRemove(_:) / .increment(_:)` (requires `import FirebaseFirestore`) | Same — `FieldValue` re-exported under `import ModaalFirestore` |
-| Custom instance (e.g. secondary `FirebaseApp`) | `Firestore.firestore(app: secondaryApp)` | `FirestoreWrapper(firestore: Firestore.firestore(app: secondaryApp))` (requires `import FirebaseFirestore`) |
 
 Notes:
 
 - **Crashlytics** uses direct extension conformance on the Firebase SDK type (no wrapper class), so the factory lives on `FirebaseCrashlyticsProtocol`. Swift's protocol-static dispatch requires an expected-type context — call it via implicit-member syntax: `let c: FirebaseCrashlyticsProtocol = .makeDefault()`.
 - **Messaging / Remote Config** have no `makeDefault(emulator:)` overload — the Firebase Emulator Suite doesn't cover them. For local Remote Config testing use `setDefaults(_:)` on the protocol.
-- **Non-default instance** (custom `FirebaseApp`, a pre-configured service handle, etc.): use the wrapper's public `init(...)` directly — that path requires `import Firebase*` for the SDK type name, but only at the composition root.
+- **Need a non-default instance?** (custom `FirebaseApp`, a pre-configured service handle, etc.) Use the wrapper's public `init(...)` directly — e.g. `FirestoreWrapper(firestore: Firestore.firestore(app: secondaryApp))`. That path requires `import FirebaseFirestore` for the SDK type name, but only at the composition root. Prefer `makeDefault()` / `makeDefault(emulator:)` everywhere else.
 
 ## Bootstrap
 
