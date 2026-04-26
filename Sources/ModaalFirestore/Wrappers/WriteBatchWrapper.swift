@@ -12,16 +12,19 @@ final class WriteBatchWrapper: WriteBatchProtocol {
 
   // MARK: - WriteBatchProtocol
 
-  func setData(_ data: [String: Any], forDocument document: DocumentReferenceProtocol, mergeOption: MergeOption) {
+  func setData(_ data: [String: Any], forDocument document: DocumentReferenceProtocol) {
     let docRef = (document as! DocumentReferenceWrapper).documentRef
-    switch mergeOption {
-    case .overwrite:
-      batch.setData(data, forDocument: docRef)
-    case .merge:
-      batch.setData(data, forDocument: docRef, merge: true)
-    case .mergeFields(let fields):
-      batch.setData(data, forDocument: docRef, mergeFields: fields)
-    }
+    batch.setData(data, forDocument: docRef)
+  }
+
+  func setData(_ data: [String: Any], forDocument document: DocumentReferenceProtocol, merge: Bool) {
+    let docRef = (document as! DocumentReferenceWrapper).documentRef
+    batch.setData(data, forDocument: docRef, merge: merge)
+  }
+
+  func setData(_ data: [String: Any], forDocument document: DocumentReferenceProtocol, mergeFields: [Any]) {
+    let docRef = (document as! DocumentReferenceWrapper).documentRef
+    batch.setData(data, forDocument: docRef, mergeFields: mergeFields)
   }
 
   func updateData(_ fields: [String: Any], forDocument document: DocumentReferenceProtocol) {

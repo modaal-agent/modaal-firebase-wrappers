@@ -49,11 +49,15 @@ func exerciseAuth(_ auth: FirebaseAuthProtocol) {
   auth.revokeToken(withAuthorizationCode: "auth_code") { _ in }
 
   // signIn(with:) — exercised via exerciseAuthCredential
-  // canHandleOpenUrl, setAPNSToken, canHandleRemoteNotification
-  _ = auth.canHandleOpenUrl(URL(string: "https://example.com")!)
+  // canHandle, setAPNSToken, canHandleNotification — canonical Firebase iOS SDK signatures.
+  _ = auth.canHandle(URL(string: "https://example.com")!)
   auth.setAPNSToken(Data(), type: .sandbox)
   auth.setAPNSToken(Data(), type: .prod)
   auth.setAPNSToken(Data(), type: .unknown)
+  _ = auth.canHandleNotification([:])
+
+  // Swift-idiomatic aliases (extension layer; delegate to canonical).
+  _ = auth.canHandleOpenUrl(URL(string: "https://example.com")!)
   _ = auth.canHandleRemoteNotification([:])
 }
 

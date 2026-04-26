@@ -88,10 +88,14 @@ func exerciseDocumentRef(_ ref: DocumentReferenceProtocol) {
 
   ref.getDocument(source: .server) { _ in }
 
-  // Write — default mergeOption (overwrite)
+  // Write — canonical Firebase iOS SDK signatures (protocol-level surface).
+  // These are what the Sourcery-generated mocks expose.
   ref.setData(["name": "Alice"]) { _ in }
+  ref.setData(["name": "Alice"], merge: true) { _ in }
+  ref.setData(["name": "Alice"], mergeFields: ["name"]) { _ in }
 
-  // Write — explicit MergeOption variants
+  // Write — Swift-idiomatic MergeOption form (extension layer; delegates to
+  // the canonical methods above). Both forms compile and behave identically.
   ref.setData(["name": "Alice"], mergeOption: .overwrite) { _ in }
   ref.setData(["name": "Alice"], mergeOption: .merge) { _ in }
   ref.setData(["name": "Alice"], mergeOption: .mergeFields(["name"])) { _ in }
@@ -149,7 +153,9 @@ func exerciseQuery(_ query: QueryProtocol) {
   // Filter with FieldPath.documentId
   let _: QueryProtocol = query.whereFilter(.equalTo(.documentId, value: "abc123"))
 
-  // Ordering
+  // Ordering — string literal (v1.4.0 ExpressibleByStringLiteral conformance)
+  let _: QueryProtocol = query.order(by: "createdAt", descending: true)
+  // Ordering — explicit FieldPath (still supported)
   let _: QueryProtocol = query.order(by: .field("createdAt"), descending: true)
 
   // Limiting
@@ -235,12 +241,30 @@ func exercisePagination(_ query: QueryProtocol, snapshot: DocumentSnapshotProtoc
 
 /// Exercises every property on QuerySnapshotProtocol.
 func exerciseQuerySnapshot(_ snapshot: QuerySnapshotProtocol) {
-  let _: [DocumentSnapshotProtocol] = snapshot.documents
+  // QueryDocumentSnapshotProtocol — data() is non-optional for query results.
+  let _: [QueryDocumentSnapshotProtocol] = snapshot.documents
   let _: [DocumentChangeProtocol] = snapshot.documentChanges
   _ = snapshot.count
   _ = snapshot.isEmpty
   _ = snapshot.metadata.hasPendingWrites
   _ = snapshot.metadata.isFromCache
+
+  // Iterate without `guard let` — query-result data() is non-optional.
+  for doc in snapshot.documents {
+    let _: [String: Any] = doc.data()
+    let _: String = doc.documentID
+  }
+
+  // Compile-only proof of the dual-`data()` overload resolution: the same
+  // QueryDocumentSnapshotProtocol value resolves to non-optional under its
+  // own static type and to optional under DocumentSnapshotProtocol upcast.
+  // If a future overload-disambiguation tweak regresses this, the SampleApp
+  // build will fail loudly.
+  if let firstDoc = snapshot.documents.first {
+    let _: [String: Any] = firstDoc.data()                          // non-optional
+    let parent: DocumentSnapshotProtocol = firstDoc
+    let _: [String: Any]? = parent.data()                           // optional via upcast
+  }
 }
 
 // MARK: - DocumentChangeProtocol
@@ -248,7 +272,8 @@ func exerciseQuerySnapshot(_ snapshot: QuerySnapshotProtocol) {
 /// Exercises DocumentChangeProtocol.
 func exerciseDocumentChange(_ change: DocumentChangeProtocol) {
   let _: DocumentChangeType = change.type
-  let _: DocumentSnapshotProtocol = change.document
+  // DocumentChange always references a query-context document — non-optional data().
+  let _: QueryDocumentSnapshotProtocol = change.document
   _ = change.oldIndex
   _ = change.newIndex
 }
@@ -265,7 +290,12 @@ func exerciseSnapshotMetadata(_ metadata: SnapshotMetadataProtocol) {
 
 /// Exercises every method on WriteBatchProtocol.
 func exerciseWriteBatch(_ batch: WriteBatchProtocol, doc: DocumentReferenceProtocol) {
-  // All MergeOption variants
+  // Canonical Firebase iOS SDK signatures.
+  batch.setData(["name": "Alice"], forDocument: doc)
+  batch.setData(["name": "Alice"], forDocument: doc, merge: true)
+  batch.setData(["name": "Alice"], forDocument: doc, mergeFields: ["name"])
+
+  // Swift-idiomatic MergeOption form (extension layer).
   batch.setData(["name": "Alice"], forDocument: doc, mergeOption: .overwrite)
   batch.setData(["name": "Alice"], forDocument: doc, mergeOption: .merge)
   batch.setData(["name": "Alice"], forDocument: doc, mergeOption: .mergeFields(["name"]))
@@ -287,7 +317,12 @@ func exerciseWriteBatch(_ batch: WriteBatchProtocol, doc: DocumentReferenceProto
 func exerciseTransaction(_ transaction: TransactionProtocol, doc: DocumentReferenceProtocol) {
   _ = try? transaction.getDocument(doc)
 
-  // All MergeOption variants
+  // Canonical Firebase iOS SDK signatures.
+  transaction.setData(["name": "Alice"], forDocument: doc)
+  transaction.setData(["name": "Alice"], forDocument: doc, merge: true)
+  transaction.setData(["name": "Alice"], forDocument: doc, mergeFields: ["name"])
+
+  // Swift-idiomatic MergeOption form (extension layer).
   transaction.setData(["name": "Alice"], forDocument: doc, mergeOption: .overwrite)
   transaction.setData(["name": "Alice"], forDocument: doc, mergeOption: .merge)
   transaction.setData(["name": "Alice"], forDocument: doc, mergeOption: .mergeFields(["name"]))

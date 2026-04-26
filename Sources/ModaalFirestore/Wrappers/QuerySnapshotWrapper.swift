@@ -10,8 +10,8 @@ final class QuerySnapshotWrapper: QuerySnapshotProtocol {
     self.snapshot = snapshot
   }
 
-  var documents: [DocumentSnapshotProtocol] {
-    snapshot.documents.map { DocumentSnapshotWrapper(snapshot: $0) }
+  var documents: [QueryDocumentSnapshotProtocol] {
+    snapshot.documents.map { QueryDocumentSnapshotWrapper(snapshot: $0) }
   }
 
   var documentChanges: [DocumentChangeProtocol] {

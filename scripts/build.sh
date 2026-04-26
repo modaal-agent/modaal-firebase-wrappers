@@ -71,22 +71,31 @@ XCODEBUILD_COMMON=(
 cd "$GIT_ROOT"
 
 # ── Step 0: Validate generated mocks are up-to-date ──────────────
+# Set SKIP_MOCK_FRESHNESS_CHECK=1 to skip — useful when iterating on the
+# template repo locally and the regen produces expected diffs that haven't
+# been committed yet.
+# TODO: replace the git-diff comparison with a strict folder compare against
+# a temp-location regen so the check tolerates uncommitted-but-correct state.
 CURRENT_STEP="Validate generated mocks"
 echo ""
 echo "──────────────────────────────────────────"
 echo -e "\033[1;33m$CURRENT_STEP\033[0m"
 echo "──────────────────────────────────────────"
 
-install_if_missing sourcery
+if [ "${SKIP_MOCK_FRESHNESS_CHECK:-0}" = "1" ]; then
+  echo -e "\033[1;33mSkipped (SKIP_MOCK_FRESHNESS_CHECK=1)\033[0m"
+else
+  install_if_missing sourcery
 
-"$SCRIPT_DIR/generate-mocks.sh"
+  "$SCRIPT_DIR/generate-mocks.sh"
 
-if ! git diff --quiet Sources/ModaalFirebaseMocks/Generated/; then
-  echo -e "\033[1;31mGenerated mocks are stale. Run scripts/generate-mocks.sh and commit the result.\033[0m"
-  git diff --stat Sources/ModaalFirebaseMocks/Generated/
-  exit 1
+  if ! git diff --quiet Sources/ModaalFirebaseMocks/Generated/; then
+    echo -e "\033[1;31mGenerated mocks are stale. Run scripts/generate-mocks.sh and commit the result.\033[0m"
+    git diff --stat Sources/ModaalFirebaseMocks/Generated/
+    exit 1
+  fi
+  echo -e "\033[0;32mMocks are up-to-date ✓\033[0m"
 fi
-echo -e "\033[0;32mMocks are up-to-date ✓\033[0m"
 
 # ── Step 1: Build all library targets (SPM) ───────────────────────
 CURRENT_STEP="Build library targets"

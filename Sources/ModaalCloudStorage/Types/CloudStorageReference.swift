@@ -20,8 +20,8 @@ public final class CloudStorageReference: CloudStorageReferencing {
   public var name: String { reference.name }
   public var bucket: String { reference.bucket }
 
-  public func child(path: String) -> CloudStorageReferencing {
-    CloudStorageReference(reference: reference.child(path))
+  public func child(_ pathString: String) -> CloudStorageReferencing {
+    CloudStorageReference(reference: reference.child(pathString))
   }
 
   public func parent() -> CloudStorageReferencing? {
@@ -79,7 +79,7 @@ public final class CloudStorageReference: CloudStorageReferencing {
     }
   }
 
-  public func getDownloadURL(completion: @escaping (Result<URL, Error>) -> Void) {
+  public func downloadURL(completion: @escaping (Result<URL, Error>) -> Void) {
     reference.downloadURL { result in
       completion(result)
     }

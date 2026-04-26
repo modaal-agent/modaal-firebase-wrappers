@@ -16,6 +16,13 @@ public extension CloudFileStoring {
     Future { promise in self.downloadToFile(localURL: localURL) { promise($0) } }
   }
 
+  // Canonical Firebase iOS SDK signature (Combine variant).
+  func downloadURL() -> Future<URL, Error> {
+    Future { promise in self.downloadURL { promise($0) } }
+  }
+
+  // Swift-idiomatic alias — preserved for ergonomics; delegates to canonical.
+  // See Extensions/CloudFileStoring+Idioms.swift.
   func getDownloadURL() -> Future<URL, Error> {
     Future { promise in self.getDownloadURL { promise($0) } }
   }

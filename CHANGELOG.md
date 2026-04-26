@@ -1,5 +1,81 @@
 # Changelog
 
+## [1.4.0] — 2026-04-26
+
+### Added
+
+- **`ExpressibleByStringLiteral` conformance on `FieldPath`** — string-literal call sites such as `query.order(by: "createdAt", descending: true)` now work directly. Existing `.field("...")` and `.fields([...])` call sites continue to compile unchanged. Three-line additive change in `Sources/ModaalFirestore/Types/FieldPath.swift`.
+- **Refining `QueryDocumentSnapshotProtocol`** — new protocol in `Sources/ModaalFirestore/Protocols/QueryDocumentSnapshotProtocol.swift` refines `DocumentSnapshotProtocol` by overriding `data() -> [String: Any]?` with non-optional `data() -> [String: Any]`. Mirrors Firebase iOS SDK's `QueryDocumentSnapshot : DocumentSnapshot` class hierarchy. New concrete `QueryDocumentSnapshotWrapper` and Sourcery-annotated `QueryDocumentSnapshotProtocolMock` (with both `data()` overloads disambiguated as `dataStringAnyHandler` / `dataStringAnyOptionalHandler`).
+- **Two-tier API surface (B4-alt revised)** — protocol declarations now mirror Firebase iOS SDK signatures exactly (modulo the documented safety carve-outs); Swift-idiomatic ergonomic forms live as protocol *extensions* under `Sources/<Module>/Extensions/*+Idioms.swift`, delegating to the canonical methods. Mocks reflect the protocol layer only — no doubled mock surface.
+- **`Sources/ModaalFirestore/Extensions/`** — new `DocumentReferenceProtocol+Idioms.swift`, `WriteBatchProtocol+Idioms.swift`, `TransactionProtocol+Idioms.swift` preserving `setData(_:mergeOption: MergeOption, completion:)` as a Swift-idiomatic extension dispatching to canonical `setData(_:merge: Bool, completion:)` / `setData(_:mergeFields: [Any], completion:)`.
+- **`Sources/ModaalCloudStorage/Extensions/`** — new `CloudStorageReferencing+Idioms.swift`, `CloudFileStoring+Idioms.swift` preserving labeled `child(path:)` and `getDownloadURL(completion:)` as Swift-idiomatic aliases delegating to canonical `child(_)` and `downloadURL(completion:)`.
+- **`Sources/ModaalFirebaseAuth/Extensions/`** — new `FirebaseAuthProtocol+Idioms.swift` preserving `canHandleOpenUrl(_:)` and `canHandleRemoteNotification(_:)` as Swift-idiomatic aliases delegating to canonical `canHandle(_:)` and `canHandleNotification(_:)`.
+- **Combine variants of canonical signatures** — `setData(_:merge: Bool)`, `setData(_:mergeFields: [Any])`, `downloadURL()` Combine extensions added alongside the existing `setData(_:mergeOption:)` and `getDownloadURL()` aliases.
+- **New SPM test target `ModaalCloudStorageCombineTests`** — hosts `CloudStorageSignatureParityTests`.
+- **`FirebaseSignatureParityTests`** in `Tests/ModaalFirestoreCombineTests/` — verifies Firestore `setData(_:merge:)` and `setData(_:mergeFields:)` mocks; verifies the `mergeOption: MergeOption` extension dispatches to the canonical mock handlers.
+- **`AuthSignatureParityTests`** in `Tests/ModaalFirebaseAuthCombineTests/` — verifies Auth `canHandle(_)` and `canHandleNotification(_)` mocks; verifies the legacy `canHandleOpenUrl(_)` / `canHandleRemoteNotification(_)` aliases dispatch to the canonical mock handlers.
+- **`QueryDocumentSnapshotProtocolTests`** in `Tests/ModaalFirestoreCombineTests/` — verifies dual `data()` overload resolution (non-optional under `QueryDocumentSnapshotProtocol` typing; optional under `DocumentSnapshotProtocol` upcast); iteration without `guard let`.
+- **`FieldPathExpressibleByStringLiteralTests`** in `Tests/ModaalFirestoreTypeMappingTests/` — string-literal conformance produces same `FirebaseFirestore.FieldPath` as `.field(_:)`.
+
+### Changed (formally breaking — see Semver below)
+
+- **`QuerySnapshotProtocol.documents`** return type narrows from `[DocumentSnapshotProtocol]` to `[QueryDocumentSnapshotProtocol]`. Type-inferred call sites (`for doc in snapshot.documents`) are unaffected; explicit `[DocumentSnapshotProtocol]` ascriptions need updating.
+- **`DocumentChangeProtocol.document`** return type narrows from `DocumentSnapshotProtocol` to `QueryDocumentSnapshotProtocol`.
+
+### Changed (below-the-strict-semver-line under this library's interpretation)
+
+These changes are protocol-declaration changes preserved at the call site via the extension layer. Manual protocol conformers (vanishingly rare) need to add the new methods; consumer call sites are unaffected.
+
+- **`DocumentReferenceProtocol`**: replaces `setData(_:mergeOption: MergeOption, completion:)` with canonical `setData(_:completion:)` + `setData(_:merge: Bool, completion:)` + `setData(_:mergeFields: [Any], completion:)`. The `mergeOption:` form lives in `Extensions/DocumentReferenceProtocol+Idioms.swift`.
+- **`WriteBatchProtocol`**, **`TransactionProtocol`**: same pattern for `setData(_:forDocument:...)`.
+- **`CloudStorageReferencing.child(path:)`** renamed to canonical `child(_)` (positional). Labeled form preserved as extension.
+
+  > ⚠️ Mock-handler rename: pre-v1.4.0 the labeled-arg overload generated `childPathHandler`; v1.4.0 generates `childHandler` for the canonical positional form. Tests that stubbed `mock.childPathHandler = ...` must migrate to `mock.childHandler = ...`. The default behavior when no handler is set is `fatalError` — silently-unstubbed call sites trap loudly.
+- **`CloudFileStoring.getDownloadURL(completion:)`** renamed to canonical `downloadURL(completion:)`. Old name preserved as extension.
+
+  > ⚠️ Mock-handler rename: pre-v1.4.0 generated `getDownloadURLHandler`; v1.4.0 generates `downloadURLHandler`. Same migration pattern.
+- **`FirebaseAuthProtocol.canHandleOpenUrl(_)`** and **`canHandleRemoteNotification(_)`** renamed to canonical `canHandle(_)` and `canHandleNotification(_)`. Old names preserved as extensions.
+
+  > ⚠️ Mock-handler renames: `canHandleOpenUrlHandler` → `canHandleHandler`; `canHandleRemoteNotificationHandler` → `canHandleNotificationHandler`.
+- **Sourcery mock-handler renames** following the protocol-method renames: tests that stub mock handlers by name need to update.
+
+  > ⚠️ **Subtle rebind risk for `setDataHandler` stubs.** Pre-v1.4.0 the only `setData` overload on `DocumentReferenceProtocol` was `setData(_:mergeOption:completion:)`, and its mock handler was `setDataHandler` with closure shape `((data, mergeOption, completion) -> Void)?`. After v1.4.0:
+  > - `setDataHandler` is now bound to the new no-merge canonical `setData(_:completion:)` with closure shape `((data, completion) -> Void)?`.
+  > - The merge case maps to `setDataDocumentDataMergeCompletionHandler` with shape `((data, merge, completion) -> Void)?`.
+  > - The merge-fields case maps to `setDataDocumentDataMergeFieldsCompletionHandler` with shape `((data, mergeFields, completion) -> Void)?`.
+  >
+  > Stubs of the old 3-arg `setDataHandler` must be migrated to whichever canonical handler matches the SUT's call site. Stubs that are not migrated may fail to compile (the closure-shape change is detected) — but if a test only assigns a closure of the form `{ _, _, _ in … }` that happens to match a different overload's handler closure-shape, the rebind can be silent. Audit any pre-v1.4.0 `mock.setDataHandler = ...` stub against the new mapping.
+
+  Same pattern applies to `WriteBatchProtocol`/`TransactionProtocol`: pre-v1.4.0 `setDataHandler` accepted `(data, document, mergeOption)`; v1.4.0 binds it to the new no-merge `setData(_:forDocument:)` with shape `(data, document)`. Merge variants map to `setDataDataForDocumentDocumentMergeHandler` and `setDataDataForDocumentDocumentMergeFieldsHandler`.
+
+### Documentation
+
+- **`Docs/agent/patterns.md`** — three new sections: `#two-tier-api-surface` (the codified principle: protocols 1:1 with Firebase, ergonomic forms as extensions), `#iterating-query-snapshots` (the new two-protocol structure), `#combine-layer` (when to prefer Combine variants + cancellable retention as lifecycle binding).
+- **`Docs/agent/anti-patterns.md`** — new bullet under "Protocol Design": wrapper-idiomatic methods declared on the *protocol* that diverge from Firebase signatures are wrapper bugs and revert in code review.
+- **`Docs/agent/coverage.md`** — `setData`, `child`, `downloadURL`, `canHandle*` rows annotated with the canonical protocol surface plus the Swift-idiomatic extension aliases. New `QueryDocumentSnapshot` row in `ModaalFirestore` table. New "When to prefer" preamble on the Combine Extension Layer section.
+- **`Docs/human/getting-started.md`** — three new subsections: "Migrating from raw Firebase iOS SDK code" (the three intentional differences), "Iterating query snapshots" (the two-protocol structure), "Swift-idiomatic extensions" (canonical vs alias forms).
+
+### Build infrastructure
+
+- **`scripts/generate-mocks.sh`** pinned to `swift-sourcery-templates` `0.2.14` (was `0.2.13`). The 0.2.14 release adds return-type-only-overload disambiguation in the mock template — required so `QueryDocumentSnapshotProtocolMock` can expose both `data()` overloads as distinct handlers.
+- **`scripts/build.sh`** gains a `SKIP_MOCK_FRESHNESS_CHECK=1` env override for local iteration when the regen produces expected diffs that haven't been committed yet (the freshness check still runs by default).
+
+### Why
+
+Two drivers:
+
+1. **The library's primary promise is "protocol surface 1:1 with `firebase-ios-sdk`".** The `wikimemory-dgra0` migration surfaced several wrapper-idiomatic protocol-declaration divergences (`mergeOption:` enum instead of `merge: Bool`/`mergeFields:`, `child(path:)` instead of positional `child(_)`, `getDownloadURL` instead of `downloadURL`, `canHandleOpenUrl`/`canHandleRemoteNotification` instead of `canHandle`/`canHandleNotification`). v1.4.0 moves these to the extension layer so the protocol declarations match Firebase exactly while consumer call sites built on the wrapper-idiomatic forms continue to compile unchanged.
+2. **Restoring Firebase's `QueryDocumentSnapshot : DocumentSnapshot` type-level guarantee.** The friction report flagged that iterating `snapshot.documents` required a redundant `guard let data = doc.data() else { continue }` even though query results are by definition existent. The new refining `QueryDocumentSnapshotProtocol` mirrors Firebase's class hierarchy and removes the spurious guard.
+
+### Semver
+
+This release contains exactly one formally-breaking change (B3's protocol return-type narrowing) plus a class of below-the-line changes (protocol-declaration changes preserved via the extension layer; Sourcery mock-handler renames following protocol method renames). Under this library's interpretation:
+
+1. **Protocol-declaration changes that preserve call-site behavior via the extension layer are non-breaking.** Manual protocol conformers (vanishingly rare) need to add the new methods; consumer call sites are unaffected.
+2. **Mock handler-closure renames following protocol-method renames are non-breaking.** The mock surface is an implementation detail of the testing layer — when a protocol method renames, its associated mock handler renames in lockstep. Tests that stub mock handlers by name need to update; tests that exercise the mock through call-site syntax don't.
+
+This puts B3's protocol return-type narrowing as the only formally-breaking change. Single narrow break = minor bump (1.4.0). Consumers who disagree with this interpretation can pin `from: "1.3.0"`.
+
 ## [1.3.0] — 2026-04-26
 
 ### Added

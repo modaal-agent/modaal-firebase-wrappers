@@ -12,7 +12,16 @@ public protocol DocumentReferenceProtocol: AnyObject {
 
   func getDocument(completion: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void)
   func getDocument(source: FirestoreSource, completion: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void)
-  func setData(_ data: [String: Any], mergeOption: MergeOption, completion: @escaping (Result<Void, Error>) -> Void)
+
+  // Canonical Firebase iOS SDK signatures.
+  // Note: the no-arg `setData(_:completion:)` form is the *overwrite* case —
+  // semantically equivalent to `setData(_:merge: false, completion:)`. Use
+  // `setData(_:merge: true, completion:)` for shallow merges or
+  // `setData(_:mergeFields: [Any], completion:)` for selective merges.
+  func setData(_ documentData: [String: Any], completion: @escaping (Result<Void, Error>) -> Void)
+  func setData(_ documentData: [String: Any], merge: Bool, completion: @escaping (Result<Void, Error>) -> Void)
+  func setData(_ documentData: [String: Any], mergeFields: [Any], completion: @escaping (Result<Void, Error>) -> Void)
+
   func updateData(_ fields: [String: Any], completion: @escaping (Result<Void, Error>) -> Void)
   func delete(completion: @escaping (Result<Void, Error>) -> Void)
 
@@ -20,10 +29,6 @@ public protocol DocumentReferenceProtocol: AnyObject {
 }
 
 public extension DocumentReferenceProtocol {
-  func setData(_ data: [String: Any], completion: @escaping (Result<Void, Error>) -> Void) {
-    setData(data, mergeOption: .overwrite, completion: completion)
-  }
-
   func addSnapshotListener(_ listener: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ListenerRegistrationProtocol {
     addSnapshotListener(includeMetadataChanges: false, listener)
   }

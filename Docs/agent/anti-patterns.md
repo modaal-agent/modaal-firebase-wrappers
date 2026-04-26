@@ -10,6 +10,8 @@
 
 - **Never add Sourcery/Mockable annotations.** Mock generation tooling is TBD. Don't add `/// sourcery: CreateMock`, `@Mockable`, or similar annotations. The chosen tool will add its own.
 
+- **Never declare wrapper-idiomatic methods on the *protocol* that diverge from Firebase iOS SDK signatures.** The protocol layer is 1:1 with `firebase-ios-sdk` (modulo the documented safety carve-outs). Swift-idiomatic ergonomic forms — `MergeOption` enum, labeled `child(path:)`, `getDownloadURL` aliased over `downloadURL`, `canHandleOpenUrl` aliased over `canHandle`, etc. — belong in protocol *extensions* under `Sources/<Module>/Extensions/`, where they delegate to the canonical Firebase-shaped protocol method. See [patterns.md § Two-tier API surface](patterns.md#two-tier-api-surface). Wrapper-style aliases declared on the protocol get reverted in code review.
+
 ## Wrapper Implementation
 
 - **Never create umbrella facades.** No `ModaalFirebase.auth`, `ModaalFirebase.firestore` etc. Each module is independent. Consumers compose what they need.
@@ -49,3 +51,5 @@ The rules above govern the wrapper library itself. The rules in this section app
 - **Do not `import FirebaseFirestore` / `import FirebaseAuth` / `import FirebaseStorage` / `import FirebaseMessaging` in app code outside the composition root.** Use `import ModaalFirestore` / `import ModaalFirebaseAuth` / `import ModaalCloudStorage` / `import ModaalFirebaseMessaging`. The wrapper-protocol types live in the `Modaal*` modules; raw Firebase imports indicate either a missed migration site or an escape-hatch leak.
 
 - **Do use the escape hatch (`firestore.firestore`, `cloudStorage.storage`, etc.) only at the single call site that needs the raw type** — with a local `import FirebaseFirestore` (or whichever module) in *that file only*, never project-wide. Each escape-hatch use is a coverage gap; consider filing one against [`coverage.md`](coverage.md).
+
+- **Do not mix real entry-point wrappers with mocked sub-protocols in tests.** Mocks compose with mocks; wrappers compose with wrappers. The wrappers' protocol-to-concrete bridging uses `as!` force-casts internally (see [patterns.md "Wrapper Classes" #4](patterns.md)) — this is safe in production because only our wrappers implement these protocols. Passing a `DocumentReferenceProtocolMock` (or `FirebaseUserProtocolMock`, etc.) into a real `WriteBatchWrapper` / `TransactionWrapper` / `FirebaseAuthWrapper` method that expects a sub-protocol triggers an `as!` failure inside the wrapper at runtime. If you want a transactional/batched/auth-mutating test, mock the *entry-point* protocol (`WriteBatchProtocol`, `TransactionProtocol`, `FirebaseAuthProtocol`) directly — never an intermediate.

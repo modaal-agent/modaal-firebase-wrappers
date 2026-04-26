@@ -39,6 +39,14 @@ class CloudFileStoringMock: CloudFileStoring {
     }
     var downloadToFileCallCount: Int = 0
     var downloadToFileHandler: ((_ localURL: URL, _ completion: @escaping (Result<URL, Error>) -> Void) -> ())? = nil
+    func downloadURL(completion: @escaping (Result<URL, Error>) -> Void) {
+        downloadURLCallCount += 1
+        if let __downloadURLHandler = self.downloadURLHandler {
+            __downloadURLHandler(completion)
+        }
+    }
+    var downloadURLCallCount: Int = 0
+    var downloadURLHandler: ((_ completion: @escaping (Result<URL, Error>) -> Void) -> ())? = nil
     func getData(maxSize: Int64, completion: @escaping (Result<Data, Error>) -> Void) {
         getDataCallCount += 1
         if let __getDataHandler = self.getDataHandler {
@@ -47,14 +55,6 @@ class CloudFileStoringMock: CloudFileStoring {
     }
     var getDataCallCount: Int = 0
     var getDataHandler: ((_ maxSize: Int64, _ completion: @escaping (Result<Data, Error>) -> Void) -> ())? = nil
-    func getDownloadURL(completion: @escaping (Result<URL, Error>) -> Void) {
-        getDownloadURLCallCount += 1
-        if let __getDownloadURLHandler = self.getDownloadURLHandler {
-            __getDownloadURLHandler(completion)
-        }
-    }
-    var getDownloadURLCallCount: Int = 0
-    var getDownloadURLHandler: ((_ completion: @escaping (Result<URL, Error>) -> Void) -> ())? = nil
     func getMetadata(completion: @escaping (Result<CloudStorageMetadata, Error>) -> Void) {
         getMetadataCallCount += 1
         if let __getMetadataHandler = self.getMetadataHandler {
@@ -171,15 +171,15 @@ class CloudStorageReferencingMock: CloudStorageReferencing {
     var name: String = ""
 
     // MARK: - Methods
-    func child(path: String) -> CloudStorageReferencing {
+    func child(_ pathString: String) -> CloudStorageReferencing {
         childCallCount += 1
         if let __childHandler = self.childHandler {
-            return __childHandler(path)
+            return __childHandler(pathString)
         }
         fatalError("childHandler expected to be set.")
     }
     var childCallCount: Int = 0
-    var childHandler: ((_ path: String) -> (CloudStorageReferencing))? = nil
+    var childHandler: ((_ pathString: String) -> (CloudStorageReferencing))? = nil
     func delete(completion: @escaping (Result<Void, Error>) -> Void) {
         deleteCallCount += 1
         if let __deleteHandler = self.deleteHandler {
@@ -196,6 +196,14 @@ class CloudStorageReferencingMock: CloudStorageReferencing {
     }
     var downloadToFileCallCount: Int = 0
     var downloadToFileHandler: ((_ localURL: URL, _ completion: @escaping (Result<URL, Error>) -> Void) -> ())? = nil
+    func downloadURL(completion: @escaping (Result<URL, Error>) -> Void) {
+        downloadURLCallCount += 1
+        if let __downloadURLHandler = self.downloadURLHandler {
+            __downloadURLHandler(completion)
+        }
+    }
+    var downloadURLCallCount: Int = 0
+    var downloadURLHandler: ((_ completion: @escaping (Result<URL, Error>) -> Void) -> ())? = nil
     func getData(maxSize: Int64, completion: @escaping (Result<Data, Error>) -> Void) {
         getDataCallCount += 1
         if let __getDataHandler = self.getDataHandler {
@@ -204,14 +212,6 @@ class CloudStorageReferencingMock: CloudStorageReferencing {
     }
     var getDataCallCount: Int = 0
     var getDataHandler: ((_ maxSize: Int64, _ completion: @escaping (Result<Data, Error>) -> Void) -> ())? = nil
-    func getDownloadURL(completion: @escaping (Result<URL, Error>) -> Void) {
-        getDownloadURLCallCount += 1
-        if let __getDownloadURLHandler = self.getDownloadURLHandler {
-            __getDownloadURLHandler(completion)
-        }
-    }
-    var getDownloadURLCallCount: Int = 0
-    var getDownloadURLHandler: ((_ completion: @escaping (Result<URL, Error>) -> Void) -> ())? = nil
     func getMetadata(completion: @escaping (Result<CloudStorageMetadata, Error>) -> Void) {
         getMetadataCallCount += 1
         if let __getMetadataHandler = self.getMetadataHandler {

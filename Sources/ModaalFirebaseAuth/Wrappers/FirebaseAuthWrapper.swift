@@ -41,8 +41,12 @@ public final class FirebaseAuthWrapper: FirebaseAuthProtocol {
   public var currentUser: FirebaseUserProtocol? { FirebaseUserWrapper.from(user: auth.currentUser) }
 
   public func addStateDidChangeListener(_ listener: @escaping (FirebaseAuthProtocol, FirebaseUserProtocol?) -> Void) -> FirebaseAuthStateDidChangeListenerHandle {
-    return auth.addStateDidChangeListener { auth, user in
-      listener(FirebaseAuthWrapper(auth: auth), FirebaseUserWrapper.from(user: user))
+    // Pass `self` (identity-preserving) rather than constructing a new wrapper
+    // per callback invocation. The Firebase callback's `auth` argument is
+    // always the same instance `self.auth` wraps.
+    return auth.addStateDidChangeListener { [weak self] _, user in
+      guard let self else { return }
+      listener(self, FirebaseUserWrapper.from(user: user))
     }
   }
 
@@ -109,9 +113,13 @@ public final class FirebaseAuthWrapper: FirebaseAuthProtocol {
   }
 
   public func deleteUser(_ user: FirebaseUserProtocol, completion: @escaping (Result<Void, Error>) -> Void) {
-    guard let user = user as? FirebaseUserWrapper else { return }
-
-    user.user.delete { error in
+    // Force-cast matches the rest of the codebase's protocol-to-concrete bridging
+    // (see Docs/agent/patterns.md "Wrapper Classes" #4). Only our wrappers
+    // implement these protocols in production; passing a mock from a consumer
+    // test would hit this trap by design — see anti-patterns.md
+    // "Mocks compose with mocks; wrappers compose with wrappers".
+    let wrapper = user as! FirebaseUserWrapper
+    wrapper.user.delete { error in
       if let error {
         completion(.failure(error))
       } else {
@@ -131,11 +139,11 @@ public final class FirebaseAuthWrapper: FirebaseAuthProtocol {
     }
   }
 
-  public func canHandleOpenUrl(_ url: URL) -> Bool {
+  public func canHandle(_ url: URL) -> Bool {
     return auth.canHandle(url)
   }
 
-  public func canHandleRemoteNotification(_ notification: [AnyHashable: Any]) -> Bool {
+  public func canHandleNotification(_ notification: [AnyHashable: Any]) -> Bool {
     return auth.canHandleNotification(notification)
   }
 

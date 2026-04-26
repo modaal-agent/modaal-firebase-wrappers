@@ -37,21 +37,25 @@ final class DocumentReferenceWrapper: DocumentReferenceProtocol {
     }
   }
 
-  func setData(_ data: [String: Any], mergeOption: MergeOption, completion: @escaping (Result<Void, Error>) -> Void) {
-    let handler: (Error?) -> Void = { error in
+  func setData(_ documentData: [String: Any], completion: @escaping (Result<Void, Error>) -> Void) {
+    documentRef.setData(documentData, completion: resultHandler(completion))
+  }
+
+  func setData(_ documentData: [String: Any], merge: Bool, completion: @escaping (Result<Void, Error>) -> Void) {
+    documentRef.setData(documentData, merge: merge, completion: resultHandler(completion))
+  }
+
+  func setData(_ documentData: [String: Any], mergeFields: [Any], completion: @escaping (Result<Void, Error>) -> Void) {
+    documentRef.setData(documentData, mergeFields: mergeFields, completion: resultHandler(completion))
+  }
+
+  private func resultHandler(_ completion: @escaping (Result<Void, Error>) -> Void) -> (Error?) -> Void {
+    return { error in
       if let error {
         completion(.failure(error))
       } else {
         completion(.success(()))
       }
-    }
-    switch mergeOption {
-    case .overwrite:
-      documentRef.setData(data, completion: handler)
-    case .merge:
-      documentRef.setData(data, merge: true, completion: handler)
-    case .mergeFields(let fields):
-      documentRef.setData(data, mergeFields: fields, completion: handler)
     }
   }
 

@@ -137,6 +137,10 @@ let package = Package(
       dependencies: ["ModaalFirebaseAuth", "ModaalFirebaseMocks"]
     ),
     .testTarget(
+      name: "ModaalCloudStorageCombineTests",
+      dependencies: ["ModaalCloudStorage", "ModaalFirebaseMocks"]
+    ),
+    .testTarget(
       name: "ModaalFirestoreTypeMappingTests",
       dependencies: [
         "ModaalFirestore",

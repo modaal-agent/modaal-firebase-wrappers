@@ -12,7 +12,22 @@ public extension DocumentReferenceProtocol {
     Future { promise in self.getDocument(source: source) { promise($0) } }
   }
 
-  func setData(_ data: [String: Any], mergeOption: MergeOption = .overwrite) -> Future<Void, Error> {
+  // Canonical Firebase iOS SDK signatures (Combine variants).
+  func setData(_ documentData: [String: Any]) -> Future<Void, Error> {
+    Future { promise in self.setData(documentData) { promise($0) } }
+  }
+
+  func setData(_ documentData: [String: Any], merge: Bool) -> Future<Void, Error> {
+    Future { promise in self.setData(documentData, merge: merge) { promise($0) } }
+  }
+
+  func setData(_ documentData: [String: Any], mergeFields: [Any]) -> Future<Void, Error> {
+    Future { promise in self.setData(documentData, mergeFields: mergeFields) { promise($0) } }
+  }
+
+  // Swift-idiomatic `MergeOption` form — preserved for API ergonomics; delegates
+  // to the canonical methods above. See Extensions/DocumentReferenceProtocol+Idioms.swift.
+  func setData(_ data: [String: Any], mergeOption: MergeOption) -> Future<Void, Error> {
     Future { promise in self.setData(data, mergeOption: mergeOption) { promise($0) } }
   }
 

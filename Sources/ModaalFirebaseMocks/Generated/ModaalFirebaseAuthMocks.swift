@@ -48,24 +48,24 @@ class FirebaseAuthProtocolMock: FirebaseAuthProtocol {
     }
     var addStateDidChangeListenerCallCount: Int = 0
     var addStateDidChangeListenerHandler: ((_ listener: @escaping (FirebaseAuthProtocol, FirebaseUserProtocol?) -> Void) -> (FirebaseAuthStateDidChangeListenerHandle))? = nil
-    func canHandleOpenUrl(_ url: URL) -> Bool {
-        canHandleOpenUrlCallCount += 1
-        if let __canHandleOpenUrlHandler = self.canHandleOpenUrlHandler {
-            return __canHandleOpenUrlHandler(url)
+    func canHandle(_ url: URL) -> Bool {
+        canHandleCallCount += 1
+        if let __canHandleHandler = self.canHandleHandler {
+            return __canHandleHandler(url)
         }
         return false
     }
-    var canHandleOpenUrlCallCount: Int = 0
-    var canHandleOpenUrlHandler: ((_ url: URL) -> (Bool))? = nil
-    func canHandleRemoteNotification(_ notification: [AnyHashable: Any]) -> Bool {
-        canHandleRemoteNotificationCallCount += 1
-        if let __canHandleRemoteNotificationHandler = self.canHandleRemoteNotificationHandler {
-            return __canHandleRemoteNotificationHandler(notification)
+    var canHandleCallCount: Int = 0
+    var canHandleHandler: ((_ url: URL) -> (Bool))? = nil
+    func canHandleNotification(_ notification: [AnyHashable: Any]) -> Bool {
+        canHandleNotificationCallCount += 1
+        if let __canHandleNotificationHandler = self.canHandleNotificationHandler {
+            return __canHandleNotificationHandler(notification)
         }
         return false
     }
-    var canHandleRemoteNotificationCallCount: Int = 0
-    var canHandleRemoteNotificationHandler: ((_ notification: [AnyHashable: Any]) -> (Bool))? = nil
+    var canHandleNotificationCallCount: Int = 0
+    var canHandleNotificationHandler: ((_ notification: [AnyHashable: Any]) -> (Bool))? = nil
     func createUser(withEmail email: String, password: String, completion: @escaping (Result<FirebaseAuthDataResultProtocol, Error>) -> ()) {
         createUserCallCount += 1
         if let __createUserHandler = self.createUserHandler {

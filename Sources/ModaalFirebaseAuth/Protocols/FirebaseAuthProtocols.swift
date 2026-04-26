@@ -32,9 +32,10 @@ public protocol FirebaseAuthProtocol: AnyObject {
 
   func revokeToken(withAuthorizationCode authorizationCode: String, completion: @escaping (Result<Void, Error>) -> Void)
 
-  func canHandleOpenUrl(_ url: URL) -> Bool
+  // Canonical Firebase iOS SDK signatures.
+  func canHandle(_ url: URL) -> Bool
+  func canHandleNotification(_ notification: [AnyHashable: Any]) -> Bool
   func setAPNSToken(_ deviceToken: Data, type: FirebaseAuthAPNSTokenType)
-  func canHandleRemoteNotification(_ notification: [AnyHashable: Any]) -> Bool
 }
 
 public protocol FirebaseUserInfoProtocol: AnyObject {

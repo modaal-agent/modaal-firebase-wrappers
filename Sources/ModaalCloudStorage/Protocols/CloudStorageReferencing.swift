@@ -8,7 +8,8 @@ public protocol CloudStorageReferencing: CloudCollectionStoring, CloudFileStorin
   var name: String { get }
   var bucket: String { get }
 
-  func child(path: String) -> CloudStorageReferencing
+  // Canonical Firebase iOS SDK signature (positional `path`).
+  func child(_ pathString: String) -> CloudStorageReferencing
   func parent() -> CloudStorageReferencing?
   func root() -> CloudStorageReferencing
 }

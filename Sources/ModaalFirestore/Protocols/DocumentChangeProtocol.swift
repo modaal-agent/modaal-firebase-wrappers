@@ -11,7 +11,7 @@ public enum DocumentChangeType {
 
 public protocol DocumentChangeProtocol {
   var type: DocumentChangeType { get }
-  var document: DocumentSnapshotProtocol { get }
+  var document: QueryDocumentSnapshotProtocol { get }
   var oldIndex: UInt { get }
   var newIndex: UInt { get }
 }

@@ -31,7 +31,9 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `addStateDidChangeListener` / `removeStateDidChangeListener` | Wrapped |
 | `shareAuthStateAcrossDevices` | Wrapped |
 | `useUserAccessGroup(_:)` | Wrapped |
-| `canHandleOpenUrl` / `setAPNSToken` / `canHandleRemoteNotification` | Wrapped |
+| `canHandle(_:)` | Wrapped (canonical Firebase iOS SDK signature). Swift-idiomatic alias `canHandleOpenUrl(_:)` available via `Extensions/FirebaseAuthProtocol+Idioms.swift` (delegates to canonical) |
+| `canHandleNotification(_:)` | Wrapped (canonical Firebase iOS SDK signature). Swift-idiomatic alias `canHandleRemoteNotification(_:)` available via `Extensions/FirebaseAuthProtocol+Idioms.swift` (delegates to canonical) |
+| `setAPNSToken(_:type:)` | Wrapped (canonical signature; no alias) |
 | `User.getIDToken` / `getIDTokenResult` | Wrapped |
 | `User.reauthenticate(with:)` | Wrapped |
 | `User.link(with:)` / `unlink(fromProvider:)` | Wrapped |
@@ -86,11 +88,12 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `collection(_:)` / `collectionGroup(_:)` / `document(_:)` | Wrapped |
 | `batch()` / `runTransaction(_:)` | Wrapped |
 | `CollectionReference.*` (collectionID, path, parent, document, addDocument) | Wrapped |
-| `DocumentReference.*` (CRUD, addSnapshotListener with includeMetadataChanges) | Wrapped |
+| `DocumentReference.*` (CRUD, addSnapshotListener with includeMetadataChanges) | Wrapped. `setData` exposes Firebase-canonical `setData(_:merge: Bool, completion:)` and `setData(_:mergeFields: [Any], completion:)`; Swift-idiomatic `setData(_:mergeOption: MergeOption, completion:)` available via `Extensions/DocumentReferenceProtocol+Idioms.swift` (delegates to canonical) |
 | `Query.*` (whereFilter, order, limit, 8 pagination cursors, getDocuments with source) | Wrapped |
-| `QuerySnapshot.*` (documents, documentChanges, count, isEmpty, metadata) | Wrapped |
-| `DocumentSnapshot.*` (documentID, exists, reference, data, get, metadata) | Wrapped |
-| `WriteBatch.*` / `Transaction.*` | Wrapped |
+| `QuerySnapshot.*` (documents, documentChanges, count, isEmpty, metadata) | Wrapped. `documents` returns `[QueryDocumentSnapshotProtocol]` (refining type with non-optional `data()`) |
+| `DocumentSnapshot.*` (documentID, exists, reference, data, get, metadata) | Wrapped (parent protocol; `data()` is `[String: Any]?`) |
+| `QueryDocumentSnapshot` (refining `DocumentSnapshot` with non-optional `data()`) | Wrapped via `QueryDocumentSnapshotProtocol`. Mirrors Firebase iOS SDK's `QueryDocumentSnapshot : DocumentSnapshot` class hierarchy. Iterating `snapshot.documents` yields the refined type — no `guard let` needed |
+| `WriteBatch.*` / `Transaction.*` | Wrapped. `setData(_:forDocument:)` / `setData(_:forDocument:merge:)` / `setData(_:forDocument:mergeFields:)` are Firebase-canonical; `setData(_:forDocument:mergeOption:)` available via `Extensions/{WriteBatch,Transaction}Protocol+Idioms.swift` (delegates to canonical) |
 | `AggregateQuery.getAggregation(source:)` | Wrapped |
 | `SnapshotMetadata` (hasPendingWrites, isFromCache) | Wrapped (direct conformance) |
 | `DocumentSnapshot.data(as:)` / `setData(from:)` (Codable) | Escape hatch |
@@ -110,8 +113,8 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | API | Status |
 |-----|--------|
 | `reference()` / `reference(forURL:)` / `reference(withPath:)` | Wrapped |
-| `fullPath` / `name` / `bucket` / `child` / `parent` / `root` | Wrapped |
-| `getData` / `downloadToFile` / `getDownloadURL` | Wrapped |
+| `fullPath` / `name` / `bucket` / `child(_:)` / `parent` / `root` | Wrapped. `child(_)` is the canonical Firebase iOS SDK signature (positional path); Swift-idiomatic `child(path:)` available via `Extensions/CloudStorageReferencing+Idioms.swift` (delegates to canonical) |
+| `getData` / `downloadToFile` / `downloadURL` | Wrapped. `downloadURL(completion:)` is the canonical Firebase iOS SDK name; Swift-idiomatic `getDownloadURL(completion:)` available via `Extensions/CloudFileStoring+Idioms.swift` (delegates to canonical) |
 | `putData` / `uploadFromFile` (with optional metadata) | Wrapped |
 | `getMetadata` / `updateMetadata` | Wrapped |
 | `delete` | Wrapped |
@@ -174,6 +177,14 @@ Google Sign-In's iOS SDK (`GIDSignIn`) is **not yet wrapped**. The `firebase-ios
 **Roadmap entry** (Modaal repo): [`firebase-shared-wrapper-followup-GoogleSignIn.md`](https://github.com/modaal-agent/modaal-agent/blob/main/specs/066-integrations-firebase/firebase-shared-wrapper-followup-GoogleSignIn.md).
 
 ## Combine Extension Layer
+
+**When to prefer.** For any Combine-based architecture (CombineRIBs, MVVM with Combine bindings), prefer Combine variants throughout:
+
+- `addSnapshotListener` → `snapshotPublisher()` (cancellable retention replaces explicit `ListenerRegistration.remove()`)
+- `addStateDidChangeListener` → `authStateDidChangePublisher()`
+- Completion-handler methods → `Future<T, Error>`
+
+Cancellable retention is the lifecycle binding. Storing the `AnyCancellable` keeps the subscription alive; dropping it cancels and tears down the underlying listener — feature, not bug. See [patterns.md § Combine layer — when to prefer](patterns.md#combine-layer).
 
 Every completion-handler method has a corresponding Combine extension (protocol default implementation):
 

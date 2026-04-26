@@ -18,6 +18,8 @@ extension FirestoreProtocol {}
 /// sourcery: CreateMock
 extension ListenerRegistrationProtocol {}
 /// sourcery: CreateMock
+extension QueryDocumentSnapshotProtocol {}
+/// sourcery: CreateMock
 extension QueryProtocol {}
 /// sourcery: CreateMock
 extension QuerySnapshotProtocol {}

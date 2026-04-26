@@ -20,7 +20,10 @@ public protocol CloudFileStoring {
   ///
   /// This can be used to share the file with others, but can be revoked by a developer
   /// in the Firebase Console.
-  func getDownloadURL(completion: @escaping (Result<URL, Error>) -> Void)
+  ///
+  /// Canonical Firebase iOS SDK name. The `getDownloadURL(completion:)` form is
+  /// available as a Swift-idiomatic alias in `Extensions/CloudFileStoring+Idioms.swift`.
+  func downloadURL(completion: @escaping (Result<URL, Error>) -> Void)
 
   // MARK: - Metadata
 

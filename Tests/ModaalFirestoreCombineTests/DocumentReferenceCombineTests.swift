@@ -92,9 +92,8 @@ final class DocumentReferenceCombineTests: XCTestCase {
   func testSetDataSuccess() {
     let mock = makeDocRefMock()
 
-    mock.setDataHandler = { data, mergeOption, completion in
+    mock.setDataHandler = { data, completion in
       XCTAssertEqual(data["name"] as? String, "Alice")
-      XCTAssertEqual(mergeOption, .overwrite)
       completion(.success(()))
     }
 
@@ -113,8 +112,10 @@ final class DocumentReferenceCombineTests: XCTestCase {
   func testSetDataWithMerge() {
     let mock = makeDocRefMock()
 
-    mock.setDataHandler = { _, mergeOption, completion in
-      XCTAssertEqual(mergeOption, .merge)
+    // The `mergeOption: .merge` extension dispatches to canonical
+    // `setData(_:merge:completion:)` — stub the corresponding mock handler.
+    mock.setDataDocumentDataMergeCompletionHandler = { _, merge, completion in
+      XCTAssertTrue(merge)
       completion(.success(()))
     }
 
@@ -127,6 +128,49 @@ final class DocumentReferenceCombineTests: XCTestCase {
       .store(in: &cancellables)
 
     wait(for: [expectation], timeout: 1)
+    XCTAssertEqual(mock.setDataDocumentDataMergeCompletionCallCount, 1)
+  }
+
+  func testSetDataCanonicalMergeBoolCombineForm() {
+    let mock = makeDocRefMock()
+
+    // The Future-returning canonical `setData(_:merge:)` extension dispatches
+    // directly to the canonical mock handler — no MergeOption involved.
+    mock.setDataDocumentDataMergeCompletionHandler = { _, merge, completion in
+      XCTAssertTrue(merge)
+      completion(.success(()))
+    }
+
+    let expectation = expectation(description: "canonical setData(_:merge:) Combine completes")
+    mock.setData(["name": "Alice"], merge: true)
+      .sink(
+        receiveCompletion: { _ in expectation.fulfill() },
+        receiveValue: { }
+      )
+      .store(in: &cancellables)
+
+    wait(for: [expectation], timeout: 1)
+    XCTAssertEqual(mock.setDataDocumentDataMergeCompletionCallCount, 1)
+  }
+
+  func testSetDataCanonicalMergeFieldsCombineForm() {
+    let mock = makeDocRefMock()
+
+    mock.setDataDocumentDataMergeFieldsCompletionHandler = { _, mergeFields, completion in
+      XCTAssertEqual(mergeFields as? [String], ["name"])
+      completion(.success(()))
+    }
+
+    let expectation = expectation(description: "canonical setData(_:mergeFields:) Combine completes")
+    mock.setData(["name": "Alice"], mergeFields: ["name"])
+      .sink(
+        receiveCompletion: { _ in expectation.fulfill() },
+        receiveValue: { }
+      )
+      .store(in: &cancellables)
+
+    wait(for: [expectation], timeout: 1)
+    XCTAssertEqual(mock.setDataDocumentDataMergeFieldsCompletionCallCount, 1)
   }
 
   // MARK: - Future: delete
@@ -278,15 +322,3 @@ final class DocumentReferenceCombineTests: XCTestCase {
   }
 }
 
-// MARK: - MergeOption: Equatable for test assertions
-
-extension MergeOption: Equatable {
-  public static func == (lhs: MergeOption, rhs: MergeOption) -> Bool {
-    switch (lhs, rhs) {
-    case (.overwrite, .overwrite): return true
-    case (.merge, .merge): return true
-    case (.mergeFields(let a), .mergeFields(let b)): return a == b
-    default: return false
-    }
-  }
-}

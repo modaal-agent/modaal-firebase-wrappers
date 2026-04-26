@@ -24,13 +24,16 @@ func exerciseStorageRef(_ ref: CloudStorageReferencing) {
   _ = ref.name
   _ = ref.bucket
 
-  // Navigation
-  let _: CloudStorageReferencing = ref.child(path: "subfolder/file.png")
+  // Navigation — canonical Firebase iOS SDK signature (positional path).
+  let _: CloudStorageReferencing = ref.child("subfolder/file.png")
   let _: CloudStorageReferencing? = ref.parent()
   let _: CloudStorageReferencing = ref.root()
 
+  // Navigation — Swift-idiomatic labeled form (extension layer; delegates to canonical).
+  let _: CloudStorageReferencing = ref.child(path: "subfolder/file.png")
+
   // Navigation chain
-  let nested = ref.child(path: "a").child(path: "b")
+  let nested = ref.child("a").child(path: "b")
   _ = nested.parent()
   _ = nested.root()
 
@@ -60,6 +63,14 @@ func exerciseFileStoring(_ file: CloudFileStoring) {
     }
   }
 
+  // Canonical Firebase iOS SDK signature.
+  file.downloadURL { result in
+    switch result {
+    case .success(let url): _ = url.absoluteString
+    case .failure: break
+    }
+  }
+  // Swift-idiomatic alias (extension layer; delegates to canonical).
   file.getDownloadURL { result in
     switch result {
     case .success(let url): _ = url.absoluteString
@@ -154,6 +165,9 @@ func exerciseFileStoringCombine(_ file: CloudFileStoring) {
   // Downloads
   let _: Future<Data, Error> = file.getData(maxSize: 10 * 1024 * 1024)
   let _: Future<URL, Error> = file.downloadToFile(localURL: URL(fileURLWithPath: "/tmp/file"))
+  // Canonical Firebase iOS SDK signature (Combine variant).
+  let _: Future<URL, Error> = file.downloadURL()
+  // Swift-idiomatic alias (extension layer; delegates to canonical).
   let _: Future<URL, Error> = file.getDownloadURL()
 
   // Metadata

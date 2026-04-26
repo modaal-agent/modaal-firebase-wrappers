@@ -23,6 +23,6 @@ public protocol RemoteConfigListenerRegistration: AnyObject {
   func remove()
 }
 
-public protocol RemoteConfigUpdateProtocol {
+public protocol RemoteConfigUpdateProtocol: AnyObject {
   var updatedKeys: Set<String> { get }
 }

@@ -18,8 +18,8 @@ final class DocumentChangeWrapper: DocumentChangeProtocol {
     }
   }
 
-  var document: DocumentSnapshotProtocol {
-    DocumentSnapshotWrapper(snapshot: change.document)
+  var document: QueryDocumentSnapshotProtocol {
+    QueryDocumentSnapshotWrapper(snapshot: change.document)
   }
 
   var oldIndex: UInt { change.oldIndex }

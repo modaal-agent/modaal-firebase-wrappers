@@ -199,13 +199,13 @@ class CollectionReferenceProtocolMock: CollectionReferenceProtocol {
 class DocumentChangeProtocolMock: DocumentChangeProtocol {
 
     // MARK: - Variables
-    var document: DocumentSnapshotProtocol
+    var document: QueryDocumentSnapshotProtocol
     var newIndex: UInt = 0
     var oldIndex: UInt = 0
     var type: DocumentChangeType
 
     // MARK: - Initializer
-    init(document: DocumentSnapshotProtocol, type: DocumentChangeType) {
+    init(document: QueryDocumentSnapshotProtocol, type: DocumentChangeType) {
         self.document = document
         self.type = type
     }
@@ -267,14 +267,30 @@ class DocumentReferenceProtocolMock: DocumentReferenceProtocol {
     }
     var getDocumentSourceCompletionCallCount: Int = 0
     var getDocumentSourceCompletionHandler: ((_ source: FirestoreSource, _ completion: @escaping (Result<DocumentSnapshotProtocol, Error>) -> Void) -> ())? = nil
-    func setData(_ data: [String: Any], mergeOption: MergeOption, completion: @escaping (Result<Void, Error>) -> Void) {
+    func setData(_ documentData: [String: Any], completion: @escaping (Result<Void, Error>) -> Void) {
         setDataCallCount += 1
         if let __setDataHandler = self.setDataHandler {
-            __setDataHandler(data, mergeOption, completion)
+            __setDataHandler(documentData, completion)
         }
     }
     var setDataCallCount: Int = 0
-    var setDataHandler: ((_ data: [String: Any], _ mergeOption: MergeOption, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    var setDataHandler: ((_ documentData: [String: Any], _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func setData(_ documentData: [String: Any], merge: Bool, completion: @escaping (Result<Void, Error>) -> Void) {
+        setDataDocumentDataMergeCompletionCallCount += 1
+        if let __setDataDocumentDataMergeCompletionHandler = self.setDataDocumentDataMergeCompletionHandler {
+            __setDataDocumentDataMergeCompletionHandler(documentData, merge, completion)
+        }
+    }
+    var setDataDocumentDataMergeCompletionCallCount: Int = 0
+    var setDataDocumentDataMergeCompletionHandler: ((_ documentData: [String: Any], _ merge: Bool, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func setData(_ documentData: [String: Any], mergeFields: [Any], completion: @escaping (Result<Void, Error>) -> Void) {
+        setDataDocumentDataMergeFieldsCompletionCallCount += 1
+        if let __setDataDocumentDataMergeFieldsCompletionHandler = self.setDataDocumentDataMergeFieldsCompletionHandler {
+            __setDataDocumentDataMergeFieldsCompletionHandler(documentData, mergeFields, completion)
+        }
+    }
+    var setDataDocumentDataMergeFieldsCompletionCallCount: Int = 0
+    var setDataDocumentDataMergeFieldsCompletionHandler: ((_ documentData: [String: Any], _ mergeFields: [Any], _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
     func updateData(_ fields: [String: Any], completion: @escaping (Result<Void, Error>) -> Void) {
         updateDataCallCount += 1
         if let __updateDataHandler = self.updateDataHandler {
@@ -383,6 +399,51 @@ class ListenerRegistrationProtocolMock: ListenerRegistrationProtocol {
     }
     var removeCallCount: Int = 0
     var removeHandler: (() -> ())? = nil
+}
+
+// MARK: - QueryDocumentSnapshotProtocol
+class QueryDocumentSnapshotProtocolMock: QueryDocumentSnapshotProtocol {
+
+    // MARK: - Variables
+    var documentID: String = ""
+    var exists: Bool = false
+    var metadata: SnapshotMetadataProtocol
+    var reference: DocumentReferenceProtocol
+
+    // MARK: - Initializer
+    init(metadata: SnapshotMetadataProtocol, reference: DocumentReferenceProtocol) {
+        self.metadata = metadata
+        self.reference = reference
+    }
+
+    // MARK: - Methods
+    func data() -> [String: Any] {
+        dataStringAnyCallCount += 1
+        if let __dataStringAnyHandler = self.dataStringAnyHandler {
+            return __dataStringAnyHandler()
+        }
+        return [:]
+    }
+    var dataStringAnyCallCount: Int = 0
+    var dataStringAnyHandler: (() -> ([String: Any]))? = nil
+    func data() -> [String: Any]? {
+        dataStringAnyOptionalCallCount += 1
+        if let __dataStringAnyOptionalHandler = self.dataStringAnyOptionalHandler {
+            return __dataStringAnyOptionalHandler()
+        }
+        return nil
+    }
+    var dataStringAnyOptionalCallCount: Int = 0
+    var dataStringAnyOptionalHandler: (() -> ([String: Any]?))? = nil
+    func get(_ field: String) -> Any? {
+        getCallCount += 1
+        if let __getHandler = self.getHandler {
+            return __getHandler(field)
+        }
+        return nil
+    }
+    var getCallCount: Int = 0
+    var getHandler: ((_ field: String) -> (Any?))? = nil
 }
 
 // MARK: - QueryProtocol
@@ -538,7 +599,7 @@ class QuerySnapshotProtocolMock: QuerySnapshotProtocol {
     // MARK: - Variables
     var count: Int = 0
     var documentChanges: [DocumentChangeProtocol] = []
-    var documents: [DocumentSnapshotProtocol] = []
+    var documents: [QueryDocumentSnapshotProtocol] = []
     var isEmpty: Bool = false
     var metadata: SnapshotMetadataProtocol
 
@@ -577,14 +638,30 @@ class TransactionProtocolMock: TransactionProtocol {
     }
     var getDocumentCallCount: Int = 0
     var getDocumentHandler: ((_ document: DocumentReferenceProtocol) throws -> (DocumentSnapshotProtocol))? = nil
-    func setData(_ data: [String: Any], forDocument document: DocumentReferenceProtocol, mergeOption: MergeOption) {
+    func setData(_ data: [String: Any], forDocument document: DocumentReferenceProtocol) {
         setDataCallCount += 1
         if let __setDataHandler = self.setDataHandler {
-            __setDataHandler(data, document, mergeOption)
+            __setDataHandler(data, document)
         }
     }
     var setDataCallCount: Int = 0
-    var setDataHandler: ((_ data: [String: Any], _ document: DocumentReferenceProtocol, _ mergeOption: MergeOption) -> ())? = nil
+    var setDataHandler: ((_ data: [String: Any], _ document: DocumentReferenceProtocol) -> ())? = nil
+    func setData(_ data: [String: Any], forDocument document: DocumentReferenceProtocol, merge: Bool) {
+        setDataDataForDocumentDocumentMergeCallCount += 1
+        if let __setDataDataForDocumentDocumentMergeHandler = self.setDataDataForDocumentDocumentMergeHandler {
+            __setDataDataForDocumentDocumentMergeHandler(data, document, merge)
+        }
+    }
+    var setDataDataForDocumentDocumentMergeCallCount: Int = 0
+    var setDataDataForDocumentDocumentMergeHandler: ((_ data: [String: Any], _ document: DocumentReferenceProtocol, _ merge: Bool) -> ())? = nil
+    func setData(_ data: [String: Any], forDocument document: DocumentReferenceProtocol, mergeFields: [Any]) {
+        setDataDataForDocumentDocumentMergeFieldsCallCount += 1
+        if let __setDataDataForDocumentDocumentMergeFieldsHandler = self.setDataDataForDocumentDocumentMergeFieldsHandler {
+            __setDataDataForDocumentDocumentMergeFieldsHandler(data, document, mergeFields)
+        }
+    }
+    var setDataDataForDocumentDocumentMergeFieldsCallCount: Int = 0
+    var setDataDataForDocumentDocumentMergeFieldsHandler: ((_ data: [String: Any], _ document: DocumentReferenceProtocol, _ mergeFields: [Any]) -> ())? = nil
     func updateData(_ fields: [String: Any], forDocument document: DocumentReferenceProtocol) {
         updateDataCallCount += 1
         if let __updateDataHandler = self.updateDataHandler {
@@ -615,14 +692,30 @@ class WriteBatchProtocolMock: WriteBatchProtocol {
     }
     var deleteDocumentCallCount: Int = 0
     var deleteDocumentHandler: ((_ document: DocumentReferenceProtocol) -> ())? = nil
-    func setData(_ data: [String: Any], forDocument document: DocumentReferenceProtocol, mergeOption: MergeOption) {
+    func setData(_ data: [String: Any], forDocument document: DocumentReferenceProtocol) {
         setDataCallCount += 1
         if let __setDataHandler = self.setDataHandler {
-            __setDataHandler(data, document, mergeOption)
+            __setDataHandler(data, document)
         }
     }
     var setDataCallCount: Int = 0
-    var setDataHandler: ((_ data: [String: Any], _ document: DocumentReferenceProtocol, _ mergeOption: MergeOption) -> ())? = nil
+    var setDataHandler: ((_ data: [String: Any], _ document: DocumentReferenceProtocol) -> ())? = nil
+    func setData(_ data: [String: Any], forDocument document: DocumentReferenceProtocol, merge: Bool) {
+        setDataDataForDocumentDocumentMergeCallCount += 1
+        if let __setDataDataForDocumentDocumentMergeHandler = self.setDataDataForDocumentDocumentMergeHandler {
+            __setDataDataForDocumentDocumentMergeHandler(data, document, merge)
+        }
+    }
+    var setDataDataForDocumentDocumentMergeCallCount: Int = 0
+    var setDataDataForDocumentDocumentMergeHandler: ((_ data: [String: Any], _ document: DocumentReferenceProtocol, _ merge: Bool) -> ())? = nil
+    func setData(_ data: [String: Any], forDocument document: DocumentReferenceProtocol, mergeFields: [Any]) {
+        setDataDataForDocumentDocumentMergeFieldsCallCount += 1
+        if let __setDataDataForDocumentDocumentMergeFieldsHandler = self.setDataDataForDocumentDocumentMergeFieldsHandler {
+            __setDataDataForDocumentDocumentMergeFieldsHandler(data, document, mergeFields)
+        }
+    }
+    var setDataDataForDocumentDocumentMergeFieldsCallCount: Int = 0
+    var setDataDataForDocumentDocumentMergeFieldsHandler: ((_ data: [String: Any], _ document: DocumentReferenceProtocol, _ mergeFields: [Any]) -> ())? = nil
     func updateData(_ fields: [String: Any], forDocument document: DocumentReferenceProtocol) {
         updateDataCallCount += 1
         if let __updateDataHandler = self.updateDataHandler {

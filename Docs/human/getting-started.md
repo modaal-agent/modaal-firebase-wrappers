@@ -195,6 +195,64 @@ docRef.snapshotPublisher(includeMetadataChanges: true)
   .store(in: &cancellables)
 ```
 
+### Migrating from raw Firebase iOS SDK code
+
+Code that compiles against `firebase-ios-sdk` compiles against `modaal-firebase-wrappers` modulo:
+
+1. The `import` swap (`FirebaseFirestore` → `ModaalFirestore`, `FirebaseAuth` → `ModaalFirebaseAuth`, `FirebaseStorage` → `ModaalCloudStorage`, etc.).
+2. The protocol-typing of injected dependencies (`Firestore` → `FirestoreProtocol`, `DocumentReference` → `DocumentReferenceProtocol`, etc.).
+3. **Three intentional differences:**
+   - **`Result<…, Error>` completion shape** instead of `(value, error)` two-param closures (eliminates the `(nil, nil)` and `(value, error)` invalid states).
+   - **Required `completion:` handler** (no `nil` default) on every mutating call (prevents silent error suppression — use the [Combine layer](#using-the-combine-layer) for fire-and-forget patterns).
+   - **`StorageMetadata` → `CloudStorageMetadata`** value-type initializer (`CloudStorageMetadata(contentType: ...)`) instead of mutable class.
+
+Everything else — method names, parameter labels, overload shapes — is 1:1 with `firebase-ios-sdk`. Examples: `setData(_:merge: Bool, completion:)`, `setData(_:mergeFields: [Any], completion:)`, `child(_)` positional, `downloadURL(completion:)`, `canHandle(_:)`, `canHandleNotification(_:)`. See [`Docs/agent/patterns.md` § Two-tier API surface](../agent/patterns.md#two-tier-api-surface).
+
+### Iterating query snapshots
+
+`QuerySnapshotProtocol.documents` returns `[QueryDocumentSnapshotProtocol]` — a refining protocol that overrides the parent `DocumentSnapshotProtocol`'s optional `data() -> [String: Any]?` with a non-optional `data() -> [String: Any]`. This mirrors Firebase iOS SDK's `QueryDocumentSnapshot : DocumentSnapshot` class hierarchy.
+
+```swift
+// Query results — non-optional data(), no `guard let` needed.
+query.getDocuments { result in
+  if case .success(let snapshot) = result {
+    for doc in snapshot.documents {
+      let data: [String: Any] = doc.data()
+      ...
+    }
+  }
+}
+
+// Single document fetch — data may not exist (document might be missing).
+ref.getDocument { result in
+  if case .success(let snapshot) = result, let data = snapshot.data() {
+    ...
+  }
+}
+```
+
+### Swift-idiomatic extensions (sugar over the canonical surface)
+
+For ergonomic alternatives to the canonical Firebase iOS SDK signatures, every module ships a `Sources/<Module>/Extensions/*+Idioms.swift` file with Swift-idiomatic forms that delegate to the canonical protocol methods:
+
+```swift
+// Canonical Firebase iOS SDK signatures (mocks expose these):
+ref.setData(["k": "v"], merge: true) { _ in }
+ref.setData(["k": "v"], mergeFields: ["k"]) { _ in }
+storageRef.child("subdir/file.png")
+fileRef.downloadURL { result in ... }
+auth.canHandle(url)
+
+// Swift-idiomatic aliases (extensions; delegate to canonical):
+ref.setData(["k": "v"], mergeOption: .merge) { _ in }
+ref.setData(["k": "v"], mergeOption: .mergeFields(["k"])) { _ in }
+storageRef.child(path: "subdir/file.png")
+fileRef.getDownloadURL { result in ... }
+auth.canHandleOpenUrl(url)
+```
+
+Mocks reflect the protocol layer only — Sourcery doesn't generate from extensions. Tests using `MockDocumentReferenceProtocol`, `MockCloudStorageReferencing`, `MockFirebaseAuthProtocol` etc. stub the canonical handlers (`setDataDocumentDataMergeCompletionHandler`, `childHandler`, `downloadURLHandler`, `canHandleHandler`).
+
 ### Escape Hatches
 
 Every entry-point wrapper exposes the underlying Firebase type as a `public` property. Use this for APIs not yet covered by the wrapper:

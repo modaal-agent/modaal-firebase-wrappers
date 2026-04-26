@@ -11,3 +11,13 @@ public enum FieldPath {
     .fields([name])
   }
 }
+
+extension FieldPath: ExpressibleByStringLiteral {
+  /// Maps a string literal to `.fields([literal])` — i.e. a single-segment
+  /// path. For multi-segment paths use `.fields(["a", "b"])` explicitly.
+  /// (No `ExpressibleByArrayLiteral` conformance is provided; it would be
+  /// ambiguous with `.fields([…])` and offers no expressive gain.)
+  public init(stringLiteral value: String) {
+    self = .fields([value])
+  }
+}

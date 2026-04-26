@@ -6,7 +6,7 @@ GIT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # ── Configuration ─────────────────────────────────────────────────
 TEMPLATES_REPO="https://github.com/ivanmisuno/swift-sourcery-templates.git"
-TEMPLATES_TAG="0.2.13"
+TEMPLATES_TAG="0.2.14"
 TEMPLATES_CACHE="$GIT_ROOT/.build/swift-sourcery-templates"
 
 # Override TEMPLATES_DIR to point at a local checkout for iteration:
