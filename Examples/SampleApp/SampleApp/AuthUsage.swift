@@ -147,6 +147,39 @@ func exerciseAuthDataResult(_ result: FirebaseAuthDataResultProtocol) {
   let _: FirebaseAuthCredentialProtocol? = result.credential
 }
 
+// MARK: - FirebaseAuthCredentialProtocol — provider factories
+
+/// Exercises the static factories on `FirebaseAuthCredentialProtocol` that
+/// construct provider credentials without `import FirebaseAuth` at the call
+/// site. Verifies type resolution + provider-id assignment without performing
+/// a sign-in.
+func exerciseAuthCredentialProviderFactories(auth: FirebaseAuthProtocol) {
+  // Apple Sign-In credential — typically built from
+  // `ASAuthorizationAppleIDCredential.identityToken` + a raw nonce stored
+  // before the request was issued.
+  let appleCredential: FirebaseAuthCredentialProtocol = .apple(
+    idToken: "header.payload.signature",
+    rawNonce: "raw-nonce",
+    fullName: nil,
+  )
+  auth.signIn(with: appleCredential) { _ in }
+
+  // Google Sign-In credential — typically built from
+  // `GIDSignInResult.user.idToken.tokenString` + `accessToken.tokenString`.
+  let googleCredential: FirebaseAuthCredentialProtocol = .google(
+    idToken: "google-id-token",
+    accessToken: "google-access-token",
+  )
+  auth.signIn(with: googleCredential) { _ in }
+
+  // OIDC / generic OAuth providers (Microsoft, Yahoo, custom OIDC):
+  // intentionally not yet wrapped at the protocol-static-factory layer —
+  // Firebase iOS SDK 12.x's modern API uses an `AuthProviderID` enum
+  // (`.custom("oidc.my-provider")`) that would need its own wrapper to keep
+  // `import FirebaseAuth` out of consumer code. Until that lands, OIDC stays
+  // escape-hatch territory; see `Docs/agent/coverage.md`.
+}
+
 // MARK: - FirebaseAuthTokenResultProtocol
 
 /// Exercises FirebaseAuthTokenResultProtocol properties.

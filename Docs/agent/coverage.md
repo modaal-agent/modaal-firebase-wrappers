@@ -43,6 +43,9 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `User.multiFactor` | Escape hatch |
 | `Auth.auth()` default instance | Wrapped (`FirebaseAuthWrapper.makeDefault(emulator:)`) |
 | `Auth.useEmulator(host:port:)` | Wrapped via `makeDefault(emulator:)` |
+| `OAuthProvider.appleCredential(withIDToken:rawNonce:fullName:)` | Wrapped via `FirebaseAuthCredentialProtocol.apple(idToken:rawNonce:fullName:)` (implicit-member syntax: `let c: FirebaseAuthCredentialProtocol = .apple(...)`) |
+| `GoogleAuthProvider.credential(withIDToken:accessToken:)` | Wrapped via `FirebaseAuthCredentialProtocol.google(idToken:accessToken:)` |
+| `OAuthProvider.credential(providerID:idToken:rawNonce:accessToken:)` (Microsoft, Yahoo, custom OIDC) | Escape hatch — Firebase 12.x's modern API takes an `AuthProviderID` enum (`.custom("oidc.my-provider")`) which would need its own wrapper (`ModaalAuthProviderID`) to keep `import FirebaseAuth` out of consumer code. Until that lands: `import FirebaseAuth` at the credential-construction call site only. |
 
 **Escape hatch:** `FirebaseAuthWrapper.auth: Auth` (public)
 
@@ -95,8 +98,12 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `Firestore.clearPersistence` / `terminate` / `waitForPendingWrites` | Escape hatch |
 | `Firestore.firestore()` default instance | Wrapped (`FirestoreWrapper.makeDefault(emulator:)`) |
 | `FirestoreSettings.host` / `isSSLEnabled` / `MemoryCacheSettings` (emulator wiring) | Wrapped via `makeDefault(emulator:)` |
+| `Timestamp` (write-payload value type) | Re-exported as `ModaalFirestore.Timestamp` (typealias) — usable under `import ModaalFirestore` alone |
+| `FieldValue.serverTimestamp() / .delete() / .arrayUnion(_:) / .arrayRemove(_:) / .increment(_:)` (write-payload sentinels) | Re-exported as `ModaalFirestore.FieldValue` (typealias) — usable under `import ModaalFirestore` alone |
 
 **Escape hatch:** `FirestoreWrapper.firestore: Firestore` (public)
+
+**Note on raw-type re-exports:** `Timestamp` and `FieldValue` are value types that the wrapper passes through opaquely via `[String: Any]` document data — re-exporting their *names* under `import ModaalFirestore` does not change the protocol surface (no method signature names them) but lets consumers construct write payloads without `import FirebaseFirestore`. Reference types (`CollectionReference`, `DocumentReference`, `ListenerRegistration`, etc.) are intentionally NOT re-exported — they have dedicated wrapper protocols.
 
 ## ModaalCloudStorage
 

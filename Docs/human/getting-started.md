@@ -83,6 +83,11 @@ Already using the Firebase SDK? Every service has a **`makeDefault()`** factory 
 | Crashlytics | `Crashlytics.crashlytics()` | `let c: FirebaseCrashlyticsProtocol = .makeDefault()` (protocol-level static factory) |
 | Messaging | `Messaging.messaging()` | `FirebaseMessagingWrapper.makeDefault()` |
 | Remote Config | `RemoteConfig.remoteConfig()` | `FirebaseRemoteConfigWrapper.makeDefault()` |
+| Apple Sign-In credential | `OAuthProvider.appleCredential(withIDToken: …, rawNonce: …, fullName: …)` | `let c: FirebaseAuthCredentialProtocol = .apple(idToken: …, rawNonce: …, fullName: …)` (protocol-level static factory, implicit-member syntax) |
+| Google Sign-In credential | `GoogleAuthProvider.credential(withIDToken: …, accessToken: …)` | `let c: FirebaseAuthCredentialProtocol = .google(idToken: …, accessToken: …)` |
+| OIDC / generic OAuth credential (Microsoft, Yahoo, custom OIDC) | `OAuthProvider.credential(providerID: .custom("oidc.my-provider"), idToken: …, rawNonce: …, accessToken: …)` | Escape hatch — `import FirebaseAuth` at the credential-construction call site only; not yet wrapped (would need a `ModaalAuthProviderID` enum). |
+| Firestore `Timestamp` (write payload) | `Timestamp(date: …)` (requires `import FirebaseFirestore`) | `Timestamp(date: …)` (re-exported under `import ModaalFirestore`) |
+| Firestore `FieldValue` (write helpers) | `FieldValue.serverTimestamp() / .delete() / .arrayUnion(_:) / .arrayRemove(_:) / .increment(_:)` (requires `import FirebaseFirestore`) | Same — `FieldValue` re-exported under `import ModaalFirestore` |
 | Custom instance (e.g. secondary `FirebaseApp`) | `Firestore.firestore(app: secondaryApp)` | `FirestoreWrapper(firestore: Firestore.firestore(app: secondaryApp))` (requires `import FirebaseFirestore`) |
 
 Notes:

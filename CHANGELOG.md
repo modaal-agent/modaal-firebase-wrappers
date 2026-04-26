@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.3.0] — 2026-04-26
+
+### Added
+
+- **`Timestamp` and `FieldValue` re-exported from `ModaalFirestore`** — public typealiases in `Sources/ModaalFirestore/Types/RawTypeReExports.swift` make these write-payload value types resolvable under `import ModaalFirestore` alone, without `import FirebaseFirestore` at the call site. Reference types (`CollectionReference`, `DocumentReference`, `ListenerRegistration`, etc.) intentionally stay un-re-exported — they have dedicated wrapper protocols.
+- **Provider-credential static factories on `FirebaseAuthCredentialProtocol`** — `Sources/ModaalFirebaseAuth/Wrappers/FirebaseAuthCredential+Providers.swift` exposes:
+  - `.apple(idToken:rawNonce:fullName:)` — wraps `OAuthProvider.appleCredential(withIDToken:rawNonce:fullName:)`. `provider` on the returned credential is `"apple.com"`.
+  - `.google(idToken:accessToken:)` — wraps `GoogleAuthProvider.credential(withIDToken:accessToken:)`. `provider` is `"google.com"`.
+
+  Call via implicit-member syntax — `let credential: FirebaseAuthCredentialProtocol = .apple(idToken: …, rawNonce: …, fullName: nil)`. Mirrors the `FirebaseCrashlyticsProtocol.makeDefault()` pattern; requires no `import FirebaseAuth` at the call site.
+
+  **Not in this release:** a `.oauth(...)` factory for Microsoft / Yahoo / custom OIDC providers. Firebase iOS SDK 12.x marked the String-providerID overloads of `OAuthProvider.credential(...)` as `unavailable in Swift`; the modern API takes an `AuthProviderID` enum (`.custom("oidc.my-provider")`), which would need its own wrapper to keep `import FirebaseAuth` out of consumer code. OIDC remains escape-hatch territory pending a `ModaalAuthProviderID` enum design.
+- **`RawTypeReExportsTests`** in `Tests/ModaalFirestoreCombineTests/` — type-resolution smoke tests verifying `Timestamp` / `FieldValue` resolve and construct under `import ModaalFirestore` alone.
+- **`FirebaseAuthCredentialFactoriesTests`** in `Tests/ModaalFirebaseAuthCombineTests/` — factory smoke tests verifying each new factory resolves under `import ModaalFirebaseAuth` alone and assigns the correct provider id.
+- **SampleApp coverage** — `Examples/SampleApp/SampleApp/AuthUsage.swift` gains `exerciseAuthCredentialProviderFactories(...)` exercising all three new factories.
+
+### Documentation
+
+- **`Docs/agent/coverage.md`** — `ModaalFirebaseAuth` table now lists Apple / Google / OIDC factories as wrapped (with their static-factory call form). `ModaalFirestore` table now lists `Timestamp` and `FieldValue` as re-exported, with a note clarifying that this is a write-payload-only carve-out (reference types remain protocol-wrapped).
+- **`Docs/human/getting-started.md`** — migration swap table gains five new rows for Apple / Google / OIDC credentials and Firestore `Timestamp` / `FieldValue` re-exports.
+
+### Why
+
+A real-world consumer migration (the 2026-04-26 `wikimemory-dgra0` Firebase migration) surfaced a recurring failure mode: agents and developers reasonably *expected* `ModaalFirestore` and `ModaalFirebaseAuth` to re-export the most-used Firebase value types and provider credential factories, because (a) other wrapped types were accessible without `import Firebase*`, and (b) the wrapper's `data() -> [String: Any]?` already let value types pass through opaquely. The expectation was wrong, but the alternative — sprinkling `import FirebaseFirestore` / `import FirebaseAuth` across consumer call sites — undermines the wrapper boundary the library exists to provide. These additions close the gap without changing the protocol architecture: typealiases for value types that were already crossing the boundary opaquely; protocol-static factories for credential construction.
+
 ## [1.2.2] — 2026-04-25
 
 ### Documentation
