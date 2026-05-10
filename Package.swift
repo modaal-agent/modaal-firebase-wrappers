@@ -6,7 +6,7 @@
 import PackageDescription
 
 // SPM 5.9 identifies packages by URL (last path component), not the internal `name` field.
-let firebaseSDK = "firebase-ios-sdk-xcframeworks"
+let firebaseSDK = "firebase-ios-sdk"
 
 let package = Package(
   name: "ModaalFirebase",
@@ -25,7 +25,7 @@ let package = Package(
     .library(name: "ModaalFirebaseMocks", targets: ["ModaalFirebaseMocks"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/akaffenberger/firebase-ios-sdk-xcframeworks.git", from: "12.12.0"),
+    .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.13.0"),
   ],
   targets: [
     // MARK: - Core

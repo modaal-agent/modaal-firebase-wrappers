@@ -19,7 +19,7 @@ Replace the binary `firebase-ios-sdk-xcframeworks` dependency with the upstream 
 
 | # | Decision | Implication |
 |---|---|---|
-| 1 | iOS floor → **17** | `Package.swift` `.iOS(.v17)`. SampleApp xcodegen.yml bumps from 15 → 17. README "Requirements". `ModaalFirebaseSQLConnect` (future) inherits. |
+| 1 | iOS floor stays at **15** | Match upstream `firebase-ios-sdk`'s own `.iOS(.v15)` floor. The future SQL Connect wrapper ships as a **separate** library product (e.g. `ModaalFirebaseSQLConnect`) with its own `.iOS(.v17)` declaration, so SQL Connect's iOS 17 requirement does not infect existing v1.x consumers. v2.0.0's only iOS-related break is whatever the underlying SDK swap forces, not a deployment-target bump. |
 | 2 | Drop xcframeworks entirely | No traits / sibling-package juggling. Single dep on `firebase-ios-sdk`. |
 | 3 | `-ObjC` linker flag — empirically validate | Build SampleApp without `-ObjC` first. If categories don't load (Firestore typically the canary), keep the requirement; document accordingly. |
 | 4 | CI: cache SourcePackages + DerivedData | Keyed on `Package.resolved` + Xcode version + macOS image. Big payoff: source builds compile gRPC-Swift / BoringSSL once, not per PR. |
@@ -51,7 +51,7 @@ Replace the binary `firebase-ios-sdk-xcframeworks` dependency with the upstream 
 1. Edit [Package.swift:9](../../Package.swift#L9) and [Package.swift:28](../../Package.swift#L28):
    - `let firebaseSDK = "firebase-ios-sdk"` (was `"firebase-ios-sdk-xcframeworks"`).
    - `.package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.13.0")` (track latest 12.x at migration time).
-2. Bump platform: `.iOS(.v17)`.
+2. Platform floor stays at `.iOS(.v15)` — match upstream `firebase-ios-sdk`. (Decision #1 in the table above.)
 3. Run `swift package resolve` from the repo root. Capture the resolved tree. Expected: one and only one `firebase-ios-sdk` in the graph.
 4. Build the package: `xcodebuild build -scheme ModaalFirebase-Package …`. Resolve any product-name mismatches (none expected — see "Pre-migration intel" — but verify).
 
@@ -70,7 +70,7 @@ Target list (verified by grep on 2026-05-10):
 |---|---|---|
 | [README.md:165-169](../../README.md#L165-L169) | Xcode 26.x + xcframeworks note | Replace with: source-built; first build slower; CI cache recommended. |
 | [README.md:59](../../README.md#L59) | `-ObjC` requirement | Update wording per Phase 6 outcome. |
-| [README.md (Requirements)](../../README.md) | iOS 15+ | iOS 17+. |
+| [README.md (Requirements)](../../README.md) | iOS 15+ | unchanged. (SQL Connect module, when shipped, will declare iOS 17+ on its own library product.) |
 | [CONTRIBUTING.md:202](../../CONTRIBUTING.md#L202), [:208](../../CONTRIBUTING.md#L208), [:210](../../CONTRIBUTING.md#L210), [:232](../../CONTRIBUTING.md#L232) | Library-side guidance referencing xcframeworks | Rewrite around the source SDK; the "never depend on FirebaseCore directly" rule **inverts** — `ModaalFirebaseCore` now does. |
 | [Docs/human/getting-started.md:50](../../Docs/human/getting-started.md#L50) | "underlying Firebase xcframeworks package" | "underlying Firebase iOS SDK". |
 | [Docs/human/architecture.md:89-91](../../Docs/human/architecture.md#L89-L91) | Whole "Why xcframeworks?" paragraph | Replace with "Why source SDK?": SQL Connect compatibility, no binary toolchain coupling. Note the build-time tradeoff and the CI cache mitigation. |
@@ -127,9 +127,10 @@ Validation procedure:
 ### Phase 7 — Release
 
 1. Update [CHANGELOG.md](../../CHANGELOG.md) — `[2.0.0] — 2026-05-DD` entry, sections:
-   - **Breaking**: iOS 15 → 17. xcframeworks dep replaced with source SDK.
+   - **Breaking**: xcframeworks dep replaced with source `firebase-ios-sdk`. Consumers' SwiftPM resolution graph changes; no source-code changes required.
    - **Removed**: `_FirebaseCore`-via-`FirebaseAnalytics` workaround on `ModaalFirebaseCore`.
-   - **Migration**: consumers bump iOS deployment target. No source-code changes required. CI may slow down on first build; cache strategy documented.
+   - **Unchanged**: iOS deployment target stays at 15 (matches upstream `firebase-ios-sdk`).
+   - **Migration notes**: cold CI builds slow down (Firebase Swift wrapper layers compile from source; see [build-time-baseline.md](build-time-baseline.md) for measured numbers); cache strategy documented.
 2. Tag `v2.0.0`. Push.
 3. Verify CI green on the tag.
 
@@ -157,7 +158,7 @@ Validation procedure:
 | `-ObjC` ends up needed only for *some* products (e.g. Firestore but not Auth) | Low | Phase 6 validates against SampleApp (full surface) + EmulatorTests (runtime). |
 | The Crashlytics `run` script path change breaks consumers | Medium | Phase 4 documentation explicitly covers it; smoke-test in EmulatorTests. |
 | Deps that the xcframeworks mirror added (e.g. ads SDK) are missing under source SDK | Low — we don't actually use ads | Audit SourcePackages graph after Phase 2 resolve. |
-| iOS 17 floor breaks downstream consumers stuck on 15/16 | High blast-radius for them, but explicitly accepted under v2.0.0 semantics | CHANGELOG migration section calls it out unambiguously. v1.4.x maintenance branch remains for laggards (per existing version policy in [README.md:175-178](../../README.md#L175-L178)). |
+| ~~iOS 17 floor breaks downstream consumers stuck on 15/16~~ | n/a under revised decision #1 | iOS floor stays at 15. SQL Connect's iOS 17 floor lives only on its standalone module. |
 
 ## Rollback / abort criteria
 

@@ -55,9 +55,33 @@ Tests themselves are fast (every assertion < 0.005s); >95% of wall time is spent
 - **Single sample.** No variance measurement. If a v2.x number lands close to the gate, run 3 samples and take the median.
 - **xcframework download is on the critical path of cold.** Source SDK has no analogous step (it `git clone`s, which is faster), but compilation more than makes up for it.
 
-## Followup numbers to capture
+## v2.x numbers — captured 2026-05-10 in Phase 2
 
-- v2.x cold (no cache) — captured during Phase 2.
-- v2.x warm (filesystem cache, locally) — captured during Phase 2.
-- v2.x cold on CI — captured during Phase 5 first run.
-- v2.x warm on CI (with `actions/cache@v4` hit) — captured during Phase 5 second+ runs.
+Same machine, same toolchain. iOS deployment target stays at 15 (Decision #1 in [migration-plan.md](migration-plan.md)). Reproducer: `rm -rf .build && /usr/bin/time -p scripts/build.sh`.
+
+| Run | wall (s) | user (s) | sys (s) | vs v1.x cold |
+|---|---:|---:|---:|---:|
+| v2 cold (`.build/` purged) | **153.84** | 35.42 | 27.92 | 1.47× |
+| v2 warm (immediately after) | **105.15** | 17.64 | 6.00 | 1.01× ✅ |
+
+Cache footprint:
+
+| Path | v1.x | v2 |
+|---:|---:|---:|
+| `.build/SourcePackages` | 1.8 GB | 1.2 GB |
+| `.build/DerivedData` | 1.1 GB | 2.3 GB |
+| `.build/` total | 2.9 GB | **3.5 GB** |
+
+**Why v2 grew DerivedData but shrank SourcePackages:** the upstream `firebase-ios-sdk` is a *hybrid* — it ships gRPC, FirebaseFirestoreInternal, GoogleAppMeasurement, abseil etc. as `.binaryTarget` xcframeworks via Google's CDN, and only the Swift wrapper layers are source-compiled. SourcePackages holds smaller source trees (the binary `.zip`s are extracted into the per-package `.xcframework/` directories under DerivedData). Net: DerivedData grew because *we* now have compiled Swift modules (FirebaseFirestore, FirebaseAuth, etc.) where v1.x had only consumed the binary mirror.
+
+**Implication for Phase 5:** the original concern that source SDK would force compilation of gRPC + BoringSSL was unfounded. Those still ship as binaries upstream. The warm number (105.15s) already passes the migration gate (< 156s) on local hardware *without* any CI cache — meaning Phase 5 can be a relatively low-stakes optimisation rather than a release-blocker.
+
+## Phase 5 gate — status under v2
+
+| Outcome | Threshold | v2 warm result | Verdict |
+|---|---:|---:|---|
+| Pass | < 156s (1.5× v1.x cold) | 105.15s | ✅ |
+| Acceptable | 156–312s | — | — |
+| Block | > 312s | — | — |
+
+CI runs may land somewhat slower (`macos-15` typical 1.3–1.8× factor → projected ~135–190s), so the cache step in Phase 5 may be needed to keep CI within the gate. Numbers will be re-captured on CI in Phase 5.
