@@ -47,7 +47,7 @@ targets:
 
 ### Required: `-ObjC` Linker Flag
 
-The underlying Firebase xcframeworks package requires the `-ObjC` linker flag for Objective-C category loading. Add it to your **app target** (not the library):
+The underlying Firebase iOS SDK requires the `-ObjC` linker flag for Objective-C category loading. Add it to your **app target** (not the library):
 
 **Package.swift:**
 ```swift

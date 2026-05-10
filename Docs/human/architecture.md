@@ -86,6 +86,6 @@ Streaming publishers are **lazy** — the listener is added on subscription. **C
 
 ## Firebase SDK dependency
 
-ModaalFirebase depends on [`akaffenberger/firebase-ios-sdk-xcframeworks`](https://github.com/akaffenberger/firebase-ios-sdk-xcframeworks) — pre-built binary xcframeworks. This avoids compiling the Firebase SDK from source (which adds significant build time).
+ModaalFirebase depends on the upstream [`firebase/firebase-ios-sdk`](https://github.com/firebase/firebase-ios-sdk) source distribution. The SDK is a hybrid: heavy parts (gRPC, FirebaseFirestoreInternal, FirebaseAnalytics, GoogleAppMeasurement, abseil) ship as `.binaryTarget` xcframeworks via Google's CDN, while the Swift wrapper layers compile from source.
 
-**Do not add a separate dependency on `firebase-ios-sdk` or `firebase-ios-sdk-xcframeworks` to your app's `Package.swift`** — ModaalFirebase pulls in the xcframeworks transitively at the version it was built against, and a second direct pin causes duplicate-XCFramework link errors when the two diverge. If you need an unwrapped Firebase API, use the escape hatch on the relevant entry-point wrapper (e.g., `firestoreWrapper.firestore`) and `import Firebase*` only at that single call site.
+**Do not add a separate dependency on `firebase-ios-sdk` to your app's `Package.swift`** — ModaalFirebase pulls it in transitively at the version it was built against. A second direct pin causes SwiftPM's "multiple similar targets in package X and Y" resolution error when the two diverge. If you need an unwrapped Firebase API, use the escape hatch on the relevant entry-point wrapper (e.g., `firestoreWrapper.firestore`) and `import Firebase*` only at that single call site.

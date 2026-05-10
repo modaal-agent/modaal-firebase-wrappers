@@ -205,9 +205,9 @@ These rules apply to **wrapper-library development**. Consumer-side anti-pattern
 
 ### Dependencies
 
-- **Never depend on `FirebaseCore` directly.** The xcframeworks package doesn't expose it as a standalone product. `ModaalFirebaseCore` depends on `FirebaseAnalytics` (which bundles `_FirebaseCore` internally).
+- **`ModaalFirebaseCore` depends on `FirebaseCore` directly.** Other modules pull `FirebaseCore` transitively through `ModaalFirebaseCore`; declare only the service-specific Firebase product (e.g. `FirebaseAuth`, `FirebaseFirestore`) on each downstream wrapper target.
 
-- **Never use the internal package name `"Firebase"` in SPM.** SPM 5.9 uses URL-derived identity: `"firebase-ios-sdk-xcframeworks"`.
+- **Never use the internal package name `"Firebase"` in SPM.** SPM 5.9 uses URL-derived identity: `"firebase-ios-sdk"`.
 
 ### Testing & Verification
 
@@ -229,7 +229,7 @@ Step-by-step guide for wrapping a new Firebase service (e.g., Firebase Database,
 
 ### Prerequisites
 
-- Verify the Firebase product exists in `firebase-ios-sdk-xcframeworks` at the current version
+- Verify the Firebase product exists in `firebase/firebase-ios-sdk` at the current version
 - Check if the product name matches the service (e.g., `FirebaseDatabase`, `FirebaseFunctions`)
 
 ### Steps

@@ -166,7 +166,7 @@ wrapper.firestore.settings.isPersistenceEnabled = false  // escape hatch
 - Swift 5.9+
 - Xcode 26.0+
 
-> **Note:** This library depends on [firebase-ios-sdk-xcframeworks](https://github.com/akaffenberger/firebase-ios-sdk-xcframeworks) (pre-built binaries) for faster build times. These binaries are built with Xcode 26.x and cannot be linked with Xcode 16.x. The Firebase source SDK supports Xcode 16+, but switching to it requires forking this library (see [wrapper plan §3.4](https://github.com/modaal-agent/modaal-agent/blob/main/specs/066-integrations-firebase/firebase-shared-wrapper-plan.md)).
+> **Note:** This library depends on the upstream [`firebase/firebase-ios-sdk`](https://github.com/firebase/firebase-ios-sdk) source distribution. Heavy components (gRPC, FirebaseFirestoreInternal, FirebaseAnalytics, abseil) ship as binary xcframeworks via Google's CDN; the Swift wrapper layers compile from source. First build adds 30–60 seconds versus a fully-prebuilt mirror — [`actions/cache@v4`](.github/workflows/ci.yml) keyed on `Package.resolved` makes warm CI builds match the v1.x baseline.
 
 ## Version Support
 

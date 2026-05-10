@@ -48,7 +48,7 @@ The package ships two sibling test source sets under `Tests/`:
 - `Tests/ModaalFirebaseSmokeTests/` — minimal round-trip per wrapper family.
 - `Tests/ModaalFirebaseIntegrationTests/` — per-service round-trips (Firestore / Auth / Cloud Storage / Remote Config) through the public protocol surface.
 
-Both source sets are compiled into a **single** XcodeGen-managed test target, `ModaalFirebaseEmulatorTests`, at `Tests/EmulatorTests/EmulatorTests.xcodeproj`. The combined target is hosted by a tiny `EmulatorTestHost.app`: Firebase's initializers reach into LaunchServices at startup and crash inside a bare xctest bundle — SPM has no notion of a test-host app, which is why the XcodeGen project exists. Splitting smoke vs. integration into two bundles would also double-link the Firebase static xcframeworks, so they share one bundle.
+Both source sets are compiled into a **single** XcodeGen-managed test target, `ModaalFirebaseEmulatorTests`, at `Tests/EmulatorTests/EmulatorTests.xcodeproj`. The combined target is hosted by a tiny `EmulatorTestHost.app`: Firebase's initializers reach into LaunchServices at startup and crash inside a bare xctest bundle — SPM has no notion of a test-host app, which is why the XcodeGen project exists. Splitting smoke vs. integration into two bundles would also double-link the Firebase static libraries (and binary xcframeworks for the C++ internals), so they share one bundle.
 
 Neither source set appears in the default SPM build graph — they run only via `scripts/run-integration-tests.sh`.
 

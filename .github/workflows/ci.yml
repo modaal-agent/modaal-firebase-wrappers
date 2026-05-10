@@ -15,5 +15,18 @@ jobs:
       - uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: '26.3'
+      - name: Cache SwiftPM artifacts
+        # Cache key gates on Package.swift content (Package.resolved is
+        # gitignored so unavailable pre-build) + Xcode major.minor.
+        # restore-keys lets a Package.swift edit fall back to the most-
+        # recent compatible cache instead of a cold rebuild.
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/SourcePackages
+            .build/DerivedData
+          key: spm-${{ runner.os }}-xc26.3-${{ hashFiles('Package.swift') }}
+          restore-keys: |
+            spm-${{ runner.os }}-xc26.3-
       - name: Build and test
         run: scripts/build.sh

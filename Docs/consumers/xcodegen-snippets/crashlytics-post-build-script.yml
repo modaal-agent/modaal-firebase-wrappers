@@ -9,7 +9,7 @@ postBuildScripts:
   - name: "Upload Crashlytics dSYMs"
     script: |
       if [ "${CONFIGURATION}" = "Release" ]; then
-        "${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk-xcframeworks/FirebaseCrashlytics/run"
+        "${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run"
       fi
     inputFiles:
       - "${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}"

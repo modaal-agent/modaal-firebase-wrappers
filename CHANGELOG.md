@@ -1,5 +1,54 @@
 # Changelog
 
+## [2.0.0] — 2026-05-10
+
+### Changed (formally breaking — see Semver below)
+
+- **Switched from `firebase-ios-sdk-xcframeworks` (binary mirror) to upstream `firebase/firebase-ios-sdk` (source).** [Package.swift](Package.swift) now depends on `https://github.com/firebase/firebase-ios-sdk.git` `from: "12.13.0"`. The old `https://github.com/akaffenberger/firebase-ios-sdk-xcframeworks.git` dep is gone. The upstream SDK is a hybrid: heavy components (gRPC, FirebaseFirestoreInternal, FirebaseAnalytics, GoogleAppMeasurement, abseil) ship as `.binaryTarget` xcframeworks via Google's CDN; the Swift wrapper layers compile from source.
+
+- **`ModaalFirebaseCore` depends on `FirebaseCore` directly.** Pre-2.0 the xcframeworks mirror didn't expose `FirebaseCore` as a standalone product, so `ModaalFirebaseCore` depended on `FirebaseAnalytics` to inherit `_FirebaseCore` transitively. Source SDK exposes `FirebaseCore` as a first-class library product, so the workaround is gone. As a knock-on, `ModaalFirebaseAnalytics` now declares its `FirebaseAnalytics` dependency explicitly (it had been inheriting it through the old Core workaround).
+
+### Removed
+
+- The `FirebaseCore`-via-`FirebaseAnalytics` workaround on `ModaalFirebaseCore`, plus the comment block in [Package.swift](Package.swift) explaining it.
+- The "switching to the source SDK requires forking this library" note from [README.md](README.md) — that's exactly what 2.0.0 does. Replaced with a brief note on the source SDK's hybrid binary/source distribution and the SwiftPM cache step.
+
+### Build infrastructure
+
+- **SwiftPM artifact cache** added to both [`.github/workflows/ci.yml`](.github/workflows/ci.yml) and [`.github/workflows/integration-tests.yml`](.github/workflows/integration-tests.yml). Caches `.build/SourcePackages` and `.build/DerivedData` keyed on `Package.swift` content + Xcode major.minor. `restore-keys` fallback lets a `Package.swift` edit partial-restore from the most-recent compatible cache rather than cold-rebuild. Local-arm warm builds land at 105s — well under the 156s migration gate even before factoring in CI cache hits.
+
+### Documentation
+
+- **Doc sweep across 11 files** ([CONTRIBUTING.md](CONTRIBUTING.md), [README.md](README.md), [Docs/human/architecture.md](Docs/human/architecture.md), [Docs/human/emulator-setup.md](Docs/human/emulator-setup.md), [Docs/human/getting-started.md](Docs/human/getting-started.md), [Docs/agent/anti-patterns.md](Docs/agent/anti-patterns.md), [Docs/agent/coverage.md](Docs/agent/coverage.md), [Docs/consumers/xcodegen-snippets/crashlytics-post-build-script.yml](Docs/consumers/xcodegen-snippets/crashlytics-post-build-script.yml), [Tests/EmulatorTests/README.md](Tests/EmulatorTests/README.md), [Tests/EmulatorTests/xcodegen.yml](Tests/EmulatorTests/xcodegen.yml), [Sources/ModaalFirebaseCrashlytics/Protocols/FirebaseCrashlyticsProtocol.swift](Sources/ModaalFirebaseCrashlytics/Protocols/FirebaseCrashlyticsProtocol.swift)) for xcframeworks-specific framing.
+- **Inverted rule in [CONTRIBUTING.md § Dependencies](CONTRIBUTING.md):** "Never depend on `FirebaseCore` directly" → "`ModaalFirebaseCore` depends on `FirebaseCore` directly. Other modules pull `FirebaseCore` transitively through `ModaalFirebaseCore`." This is the inverse of the v1.x rule, because the source SDK's product surface inverts the constraint.
+- **Crashlytics post-build script path updated** in [Docs/consumers/xcodegen-snippets/crashlytics-post-build-script.yml](Docs/consumers/xcodegen-snippets/crashlytics-post-build-script.yml): `SourcePackages/checkouts/firebase-ios-sdk-xcframeworks/FirebaseCrashlytics/run` → `SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run`. Consumers using this snippet must update their xcodegen specs.
+- **GoogleSignIn coverage gap reframed** in [Docs/agent/coverage.md](Docs/agent/coverage.md): upstream `firebase-ios-sdk` does not re-export `GoogleSignIn` (the xcframeworks mirror did). Consumers add `https://github.com/google/GoogleSignIn-iOS` as a separate SwiftPM dependency until a `ModaalGoogleSignIn` module ships.
+- **Anti-patterns rule reworded** in [Docs/agent/anti-patterns.md](Docs/agent/anti-patterns.md): the failure mode for adding a parallel direct `firebase-ios-sdk` pin is now SwiftPM's "multiple similar targets in package X and Y" resolution error, not duplicate-XCFramework link errors. Rule unchanged.
+
+### Migration guide
+
+For app authors:
+1. **No source-code changes are required.** The `Modaal*` protocol surface, factory methods, Combine extensions, and mocks are byte-identical to v1.4.x.
+2. **Bump the dependency:** `from: "1.0.0"` → `from: "2.0.0"` in your `Package.swift`.
+3. **Resolve the new SwiftPM graph.** First build downloads `firebase-ios-sdk` source + binary artifacts (1.2 GB SourcePackages, 2.3 GB DerivedData on a successful build). The Swift wrapper layers compile from source — first build ~50% slower than v1.4.x; subsequent warm builds match v1.4.x.
+4. **If you used the [Crashlytics post-build snippet](Docs/consumers/xcodegen-snippets/crashlytics-post-build-script.yml):** update the path from `firebase-ios-sdk-xcframeworks/FirebaseCrashlytics/run` to `firebase-ios-sdk/Crashlytics/run`.
+5. **If you used GoogleSignIn through the xcframeworks re-export:** add `https://github.com/google/GoogleSignIn-iOS` as a direct SwiftPM dependency.
+6. **CI users:** consider adding the [`actions/cache@v4` step](.github/workflows/ci.yml) to your workflow — keyed on `Package.swift` content + Xcode major.minor — to avoid paying the source-SDK first-build cost on every PR.
+7. **iOS deployment target stays at 15.** No change required.
+
+For library contributors:
+- The "never depend on `FirebaseCore` directly" rule **inverts** — see [CONTRIBUTING.md](CONTRIBUTING.md). Wrapper modules should depend on the specific Firebase product they wrap (e.g. `FirebaseAuth` on `ModaalFirebaseAuth`); they get `FirebaseCore` transitively through `ModaalFirebaseCore`.
+
+### Why
+
+Phase 0 of the [SQL Connect spike](specs/001-sql-connect/sql-connect-spike-plan.md) demonstrated that the xcframeworks flavour cannot coexist with `firebase/data-connect-ios-sdk` in one SwiftPM dependency graph: SwiftPM rejects the resolution with "multiple similar targets 'Firebase', 'FirebaseAnalyticsTarget', … appear in package 'firebase-ios-sdk-xcframeworks' and 'firebase-ios-sdk'" because the xcframeworks mirror redeclares the same target names as upstream, and `data-connect-ios-sdk` transitively pulls upstream in. Standard SPM workarounds (`mirrors`, `moduleAliases`, version pinning) don't help — the collision is structural. See [Examples/SQLConnectSpike/FINDINGS.md](Examples/SQLConnectSpike/FINDINGS.md) for the full failure-mode analysis. The v2.0.0 source-SDK migration unblocks SQL Connect (and any future Firebase product whose iOS SDK lives in a separate repo with independent versioning).
+
+The full migration plan is at [specs/002-source-sdk-migration/migration-plan.md](specs/002-source-sdk-migration/migration-plan.md); build-time numbers (cold/warm under v1.x and v2.0.0) at [specs/002-source-sdk-migration/build-time-baseline.md](specs/002-source-sdk-migration/build-time-baseline.md).
+
+### Semver
+
+Why a major: consumers' SwiftPM resolution graph changes — a different `Package.swift` URL, a different binary footprint (smaller SourcePackages, larger DerivedData), and a non-trivial first-build time delta. Even though the public API is identical to 1.4.x, the dependency-graph change is severe enough to warrant signalling explicit consent via a major bump. Consumers who disagree can pin `from: "1.4.0"` (the v1.4.x maintenance branch ships from `main`'s last v1 commit; see version-tracking policy in [README.md](README.md)).
+
 ## [1.4.1] — 2026-04-27
 
 ### Changed

@@ -6,7 +6,7 @@
 import PackageDescription
 
 // SPM 5.9 identifies packages by URL (last path component), not the internal `name` field.
-let firebaseSDK = "firebase-ios-sdk-xcframeworks"
+let firebaseSDK = "firebase-ios-sdk"
 
 let package = Package(
   name: "ModaalFirebase",
@@ -25,20 +25,15 @@ let package = Package(
     .library(name: "ModaalFirebaseMocks", targets: ["ModaalFirebaseMocks"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/akaffenberger/firebase-ios-sdk-xcframeworks.git", from: "12.12.0"),
+    .package(url: "https://github.com/firebase/firebase-ios-sdk.git", from: "12.13.0"),
   ],
   targets: [
     // MARK: - Core
-    // The xcframeworks package does not expose FirebaseCore as a standalone
-    // product — _FirebaseCore is an internal binary target, bundled into the
-    // FirebaseAnalytics product. Since ModaalFirebaseCore needs `import
-    // FirebaseCore` for FirebaseApp.configure(), FirebaseAnalytics is the
-    // only available product that provides it.
 
     .target(
       name: "ModaalFirebaseCore",
       dependencies: [
-        .product(name: "FirebaseAnalytics", package: firebaseSDK),
+        .product(name: "FirebaseCore", package: firebaseSDK),
       ]
     ),
 
@@ -58,6 +53,7 @@ let package = Package(
       name: "ModaalFirebaseAnalytics",
       dependencies: [
         "ModaalFirebaseCore",
+        .product(name: "FirebaseAnalytics", package: firebaseSDK),
       ]
     ),
 
