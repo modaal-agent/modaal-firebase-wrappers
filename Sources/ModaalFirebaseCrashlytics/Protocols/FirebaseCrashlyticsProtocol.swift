@@ -4,10 +4,10 @@
 import Foundation
 
 public protocol FirebaseCrashlyticsProtocol: AnyObject {
-  // Note: isCrashlyticsCollectionEnabled is available on the concrete Crashlytics
-  // instance directly. It's not part of this protocol because Crashlytics uses
-  // direct extension conformance, and the xcframeworks binary doesn't expose
-  // the property in a protocol-conformable way.
+  // Note: isCrashlyticsCollectionEnabled is intentionally not part of this
+  // protocol. Crashlytics uses direct extension conformance — consumers
+  // already hold the concrete `Crashlytics` instance and access privacy
+  // toggles on it directly.
 
   func setUserID(_ userID: String?)
   func setCustomValue(_ value: Any?, forKey key: String)

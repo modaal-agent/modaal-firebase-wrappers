@@ -10,7 +10,7 @@ The two test source sets live alongside the SPM tests:
 Both source sets compile into a **single** XcodeGen target, `ModaalFirebaseEmulatorTests`, hosted by `EmulatorTestHost.app`. Two reasons for the hosted-app + combined-bundle layout:
 
 1. Firebase's initializers reach into LaunchServices (`+[LSApplicationProxy bundleProxyForCurrentProcess]`) at startup; running inside a bare xctest bundle raises `NSInternalInconsistencyException: bundleProxyForCurrentProcess is nil`. SPM has no notion of a test-host app, hence this separate project.
-2. Splitting smoke vs. integration into two bundles would double-link the Firebase static xcframeworks into the host + each bundle. Keeping them combined sidesteps the conflict. Tests are distinguished by class-name convention (`FirebaseXxxSmokeTests` vs. `XxxIntegrationTests`).
+2. Splitting smoke vs. integration into two bundles would double-link the Firebase static libraries (and the C++/closed-source binary xcframeworks they depend on) into the host + each bundle. Keeping them combined sidesteps the conflict. Tests are distinguished by class-name convention (`FirebaseXxxSmokeTests` vs. `XxxIntegrationTests`).
 
 The shared harness at `Shared/EmulatorHarness.swift` has zero `import Firebase*` — all Firebase configuration happens in `EmulatorTestHost/EmulatorTestHostApp.swift` via `ModaalFirebase.configure(options:)` + `makeDefault(emulator:)` factories.
 

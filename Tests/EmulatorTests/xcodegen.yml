@@ -26,11 +26,10 @@ targets:
       base:
         CODE_SIGNING_ALLOWED: "NO"
         PRODUCT_BUNDLE_IDENTIFIER: dev.modaal.firebase.emulator-test-host
-        # Force-load every Objective-C class from the Firebase static
-        # xcframeworks into the host binary. Without this, classes the host
-        # app's Swift sources don't reference (e.g. FIRMessaging) get
-        # stripped at link time — and fail to resolve when the test bundle
-        # uses them via BUNDLE_LOADER.
+        # Force-load every Objective-C class from the Firebase iOS SDK into
+        # the host binary. Without this, classes the host app's Swift sources
+        # don't reference (e.g. FIRMessaging) get stripped at link time — and
+        # fail to resolve when the test bundle uses them via BUNDLE_LOADER.
         OTHER_LDFLAGS: "-ObjC"
     # Host owns every ModaalFirebase product link — test bundles inherit
     # symbols via BUNDLE_LOADER, so re-listing these products on the test
@@ -54,9 +53,9 @@ targets:
         product: ModaalFirebaseRemoteConfig
 
   # Single combined test target. The handoff split smoke vs. integration into
-  # two targets, but SPM/XcodeGen + Firebase's static xcframeworks don't
-  # tolerate the same product being linked into two test bundles alongside
-  # the host. Smoke and integration tests are distinguished by class name
+  # two targets, but SPM/XcodeGen + Firebase's static libraries don't tolerate
+  # the same product being linked into two test bundles alongside the host.
+  # Smoke and integration tests are distinguished by class name
   # (FirebaseXxxSmokeTests vs. XxxIntegrationTests) instead.
   ModaalFirebaseEmulatorTests:
     type: bundle.unit-test
@@ -77,7 +76,7 @@ targets:
       # Module visibility only. Symbols are resolved at the host app's link
       # step (the test bundle inherits via BUNDLE_LOADER); re-linking here
       # builds ModaalFirestore as its own dylib and that dylib can't resolve
-      # the Firebase xcframework's ObjC classes on its own.
+      # the Firebase SDK's ObjC classes on its own.
       - package: ModaalFirebase
         product: ModaalFirebaseCore
         link: false

@@ -24,7 +24,7 @@ For library-development anti-patterns (how *not* to build the wrappers themselve
 
 ## Dependencies
 
-- **Do not add a direct SPM dependency on `firebase-ios-sdk` or `firebase-ios-sdk-xcframeworks` "for raw types used in app code".** This library transitively pulls in `firebase-ios-sdk-xcframeworks` at the version it was built against; a second direct pin causes duplicate-XCFramework link errors when the two diverge. Prefer wrapping the missing API or filing a coverage gap against [`coverage.md`](coverage.md) over adding a parallel SDK dependency.
+- **Do not add a direct SPM dependency on `firebase-ios-sdk` "for raw types used in app code".** This library transitively pulls in `firebase-ios-sdk` at the version it was built against; a second direct pin causes SwiftPM's "multiple similar targets in package X and Y" resolution error when the two diverge in version. Prefer wrapping the missing API or filing a coverage gap against [`coverage.md`](coverage.md) over adding a parallel SDK dependency.
 
 ## Imports
 

@@ -79,7 +79,7 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `didCrashDuringPreviousExecution` | Direct access on concrete `Crashlytics` instance |
 | `Crashlytics.crashlytics()` default instance | Wrapped (`FirebaseCrashlyticsProtocol.makeDefault()` — protocol-level static factory, implicit-member syntax: `let c: FirebaseCrashlyticsProtocol = .makeDefault()`) |
 
-**Note:** Crashlytics uses direct extension conformance (`extension Crashlytics: FirebaseCrashlyticsProtocol {}`). The consumer already has the concrete type — privacy toggles and other properties are accessible directly. The xcframeworks binary doesn't expose these in a protocol-conformable way.
+**Note:** Crashlytics uses direct extension conformance (`extension Crashlytics: FirebaseCrashlyticsProtocol {}`). The consumer already has the concrete type — privacy toggles and other properties are accessed on the concrete `Crashlytics` instance directly rather than through the wrapper protocol.
 
 ## ModaalFirestore
 
@@ -160,7 +160,7 @@ No escape hatch needed — Core is a thin bootstrap layer.
 
 ## ModaalGoogleSignIn (not yet wrapped)
 
-Google Sign-In's iOS SDK (`GIDSignIn`) is **not yet wrapped**. The `firebase-ios-sdk-xcframeworks` package re-exports the `GoogleSignIn` library product (binary XCFramework, resources self-contained); consumers add it directly until a `ModaalGoogleSignIn` module ships.
+Google Sign-In's iOS SDK (`GIDSignIn`) is **not yet wrapped**. Upstream `firebase-ios-sdk` does not re-export `GoogleSignIn` — consumers add a separate SwiftPM dependency on [`google/GoogleSignIn-iOS`](https://github.com/google/GoogleSignIn-iOS) until a `ModaalGoogleSignIn` module ships.
 
 | API | Status |
 |-----|--------|
