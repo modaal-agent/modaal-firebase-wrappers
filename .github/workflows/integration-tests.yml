@@ -15,6 +15,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Cache SwiftPM artifacts
+        # Same cache shape as ci.yml — a hit on either workflow's run
+        # warms the other. See ci.yml for full notes on key strategy.
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build/SourcePackages
+            .build/DerivedData
+          key: spm-${{ runner.os }}-xc26.3-${{ hashFiles('Package.swift') }}
+          restore-keys: |
+            spm-${{ runner.os }}-xc26.3-
       - name: Run emulator-backed tests
         # The script installs firebase-tools + JDK, starts the emulator,
         # runs the tests, and tears the emulator down on exit.

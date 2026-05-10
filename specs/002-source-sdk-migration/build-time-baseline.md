@@ -84,4 +84,28 @@ Cache footprint:
 | Acceptable | 156–312s | — | — |
 | Block | > 312s | — | — |
 
-CI runs may land somewhat slower (`macos-15` typical 1.3–1.8× factor → projected ~135–190s), so the cache step in Phase 5 may be needed to keep CI within the gate. Numbers will be re-captured on CI in Phase 5.
+CI runs may land somewhat slower (`macos-15` typical 1.3–1.8× factor → projected ~135–190s), so the cache step in Phase 5 may be needed to keep CI within the gate. Numbers will be re-captured on CI when the next workflow runs.
+
+## CI cache step (Phase 5, 2026-05-10)
+
+Added to both [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) and [`.github/workflows/integration-tests.yml`](../../.github/workflows/integration-tests.yml):
+
+```yaml
+- name: Cache SwiftPM artifacts
+  uses: actions/cache@v4
+  with:
+    path: |
+      .build/SourcePackages
+      .build/DerivedData
+    key: spm-${{ runner.os }}-xc26.3-${{ hashFiles('Package.swift') }}
+    restore-keys: |
+      spm-${{ runner.os }}-xc26.3-
+```
+
+Notes:
+- **Cache scope:** `.build/SourcePackages` (the SPM resolve+download artifacts) and `.build/DerivedData` (Swift module cache + linker output). Together they capture the entire ~3.5 GB local cache.
+- **Key on `Package.swift`, not `Package.resolved`:** `Package.resolved` is gitignored, so it doesn't exist in the checkout. `hashFiles('Package.resolved')` would return an empty hash on a fresh CI run.
+- **`restore-keys` fallback:** a `Package.swift` edit (e.g. bumping the firebase-ios-sdk version pin) busts the exact-match key but still allows partial restore from the most-recent `xc26.3-` cache. SPM's per-package version handling re-resolves what differs.
+- **Xcode version baked into the key:** prevents stale-toolchain restores when CI bumps Xcode.
+
+CI cold/warm numbers will be captured on the next workflow runs and recorded here.
