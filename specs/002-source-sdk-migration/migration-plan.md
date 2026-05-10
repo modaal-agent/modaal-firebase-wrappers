@@ -124,6 +124,18 @@ Validation procedure:
    - Both succeed → drop the `-ObjC` requirement from docs and from `Tests/EmulatorTests/xcodegen.yml`. Update [Docs/human/getting-started.md:48-66](../../Docs/human/getting-started.md#L48-L66).
    - Either fails → keep the requirement. Update docs to clarify it's an iOS-SDK-wide requirement, not specific to xcframeworks.
 
+#### Phase 6 outcome — 2026-05-10
+
+**Verdict: keep the `-ObjC` requirement as documented.** No doc changes needed beyond Phase 4's wording fix.
+
+Reasoning:
+- **The runtime canary test wasn't run.** It needs the Firebase emulator (Java runtime), which isn't installed in this migration sprint's environment. Spinning it up was out of scope for the v2.0.0 push.
+- **Circumstantial signal, not conclusive:** [Examples/RunnableDemo/xcodegen.yml](../../Examples/RunnableDemo/xcodegen.yml) and [Examples/SampleApp/xcodegen.yml](../../Examples/SampleApp/xcodegen.yml) **do not** set `-ObjC` and have shipped through v1.4.x without consumer reports of category-dispatch crashes — but RunnableDemo only exercises Firestore (the lightest ObjC surface) and SampleApp is compile-only. That doesn't prove the requirement is unnecessary for Auth / Crashlytics / Messaging.
+- **Conservative default holds.** Firebase's own historical install guidance has called for `-ObjC`; SwiftPM static-library category-load semantics make it a reasonable safety. Removing it without proving safety could be a soft regression for consumers using `+load`-driven categories (Auth UI, Messaging swizzling, Crashlytics' `run` post-build script).
+- **Phase 4's doc rewrite is already correct.** The wording at [Docs/human/getting-started.md:50](../../Docs/human/getting-started.md#L50) reads "the underlying Firebase iOS SDK requires the `-ObjC` linker flag" — accurate and not xcframeworks-specific.
+
+Followup for a future minor (not v2.0.0): install JDK in CI, drop `OTHER_LDFLAGS: "-ObjC"` from [Tests/EmulatorTests/xcodegen.yml:34](../../Tests/EmulatorTests/xcodegen.yml#L34) on a feature branch, run [scripts/run-integration-tests.sh](../../scripts/run-integration-tests.sh) and observe the smoke-test outcome. If green, relax the doc requirement.
+
 ### Phase 7 — Release
 
 1. Update [CHANGELOG.md](../../CHANGELOG.md) — `[2.0.0] — 2026-05-DD` entry, sections:
