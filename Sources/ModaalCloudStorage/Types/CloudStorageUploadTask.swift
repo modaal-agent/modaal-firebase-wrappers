@@ -18,4 +18,12 @@ final class CloudStorageUploadTask: CloudStorageUploadTaskProtocol {
   func cancel() {
     task.cancel()
   }
+
+  func pause() {
+    task.pause()
+  }
+
+  func resume() {
+    task.resume()
+  }
 }

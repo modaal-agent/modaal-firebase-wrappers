@@ -49,7 +49,7 @@ final class CloudStorageIntegrationTests: XCTestCase {
     }
   }
 
-  // MARK: - Upload with progress (Wave 1)
+  // MARK: - Upload with progress
 
   func testPutDataReportsProgressAndCompletes() async throws {
     let ref: CloudStorageReferencing = storage.reference(withPath: "integ/\(UUID().uuidString).bin")
@@ -107,6 +107,60 @@ final class CloudStorageIntegrationTests: XCTestCase {
 
     // Best-effort cleanup; the object may or may not exist depending on cancel timing.
     try? await delete(ref)
+  }
+
+  // MARK: - Upload pause/resume
+
+  func testPutDataPauseAndResumeReachesCompletion() async throws {
+    let ref: CloudStorageReferencing = storage.reference(withPath: "integ/\(UUID().uuidString).bin")
+    // Multi-MiB so the upload is in-flight long enough to observe pause/resume.
+    let payload = Data(repeating: 0x43, count: 8 * 1024 * 1024)
+
+    final class State: @unchecked Sendable {
+      let lock = NSLock()
+      var pauseSeen = false
+      var resumeSeen = false
+      var onPaused: (() -> Void)?
+      var task: CloudStorageUploadTaskProtocol?
+    }
+    let state = State()
+
+    try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+      state.task = ref.putData(
+        payload,
+        events: { event in
+          state.lock.lock()
+          defer { state.lock.unlock() }
+          switch event {
+          case .paused:
+            state.pauseSeen = true
+            // Resume on the next runloop tick to give the pause observer
+            // a chance to settle before the resume request fires.
+            let onPaused = state.onPaused
+            state.onPaused = nil
+            DispatchQueue.main.async { onPaused?() }
+          case .resumed:
+            state.resumeSeen = true
+          default:
+            break
+          }
+        },
+        completion: { cont.resume(with: $0) }
+      )
+
+      state.onPaused = {
+        state.task?.resume()
+      }
+      // Pause shortly after the upload starts so it has data in-flight to pause.
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+        state.task?.pause()
+      }
+    }
+
+    XCTAssertTrue(state.pauseSeen, "Expected .paused event during upload")
+    XCTAssertTrue(state.resumeSeen, "Expected .resumed event during upload")
+
+    try await delete(ref)
   }
 
   // MARK: - Protocol-only async helpers

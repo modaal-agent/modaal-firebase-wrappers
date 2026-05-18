@@ -372,6 +372,22 @@ class CloudStorageUploadTaskProtocolMock: CloudStorageUploadTaskProtocol {
     }
     var cancelCallCount: Int = 0
     var cancelHandler: (() -> ())? = nil
+    func pause() {
+        pauseCallCount += 1
+        if let __pauseHandler = self.pauseHandler {
+            __pauseHandler()
+        }
+    }
+    var pauseCallCount: Int = 0
+    var pauseHandler: (() -> ())? = nil
+    func resume() {
+        resumeCallCount += 1
+        if let __resumeHandler = self.resumeHandler {
+            __resumeHandler()
+        }
+    }
+    var resumeCallCount: Int = 0
+    var resumeHandler: (() -> ())? = nil
 }
 
 // MARK: - FileStoring

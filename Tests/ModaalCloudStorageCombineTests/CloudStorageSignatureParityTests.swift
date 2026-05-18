@@ -73,7 +73,7 @@ final class CloudStorageSignatureParityTests: XCTestCase {
     XCTAssertEqual(mock.downloadURLCallCount, 1)
   }
 
-  // MARK: - Upload with progress (Wave 1)
+  // MARK: - Upload with progress
   //
   // Combine cannot deliver values synchronously from inside
   // `handleEvents(receiveSubscription:)` because PassthroughSubject drops
@@ -198,5 +198,73 @@ final class CloudStorageSignatureParityTests: XCTestCase {
       .sink(receiveCompletion: { _ in }, receiveValue: { _ in })
     cancellable.cancel()
     XCTAssertEqual(taskMock.cancelCallCount, 1)
+  }
+
+  // MARK: - Upload pause/resume
+
+  func testPutDataWithProgressEmitsPausedAndResumedEvents() {
+    let mock = CloudStorageReferencingMock()
+    let taskMock = CloudStorageUploadTaskProtocolMock()
+    var capturedEvents: ((CloudStorageUploadEvent) -> Void)?
+    var capturedCompletion: ((Result<Void, Error>) -> Void)?
+    mock.putDataDataEventsCompletionHandler = { _, events, completion in
+      capturedEvents = events
+      capturedCompletion = completion
+      return taskMock
+    }
+
+    var received: [CloudStorageUploadEvent] = []
+    let cancellable = mock.putDataWithProgress(Data())
+      .sink(
+        receiveCompletion: { _ in },
+        receiveValue: { received.append($0) }
+      )
+
+    capturedEvents?(.progress(bytesTransferred: 10, totalBytes: 100))
+    capturedEvents?(.paused)
+    capturedEvents?(.resumed)
+    capturedEvents?(.progress(bytesTransferred: 100, totalBytes: 100))
+    capturedCompletion?(.success(()))
+
+    XCTAssertEqual(received.count, 4)
+    if case .progress = received[0] {} else { XCTFail("Expected .progress, got \(received[0])") }
+    if case .paused  = received[1] {} else { XCTFail("Expected .paused,   got \(received[1])") }
+    if case .resumed = received[2] {} else { XCTFail("Expected .resumed,  got \(received[2])") }
+    if case .progress = received[3] {} else { XCTFail("Expected .progress, got \(received[3])") }
+    _ = cancellable
+  }
+
+  func testUploadTaskPauseResumeCancelAreIdempotentOnMock() {
+    let taskMock = CloudStorageUploadTaskProtocolMock()
+    let task: CloudStorageUploadTaskProtocol = taskMock
+
+    task.pause()
+    task.pause()
+    task.resume()
+    task.cancel()
+
+    XCTAssertEqual(taskMock.pauseCallCount, 2)
+    XCTAssertEqual(taskMock.resumeCallCount, 1)
+    XCTAssertEqual(taskMock.cancelCallCount, 1)
+  }
+
+  /// Conformers that only implement `cancel()` rely on the protocol
+  /// extension's default no-op `pause()` / `resume()` impls — must not
+  /// crash or assert.
+  func testConformerWithoutPauseResumeUsesDefaultNoOpImpls() {
+    final class CancelOnlyConformer: CloudStorageUploadTaskProtocol {
+      var cancelCallCount = 0
+      func cancel() { cancelCallCount += 1 }
+      // Intentionally omits pause() / resume() — relies on the protocol
+      // extension's no-op defaults.
+    }
+    let conformer = CancelOnlyConformer()
+    let handle: CloudStorageUploadTaskProtocol = conformer
+
+    handle.pause()
+    handle.resume()
+    handle.cancel()
+
+    XCTAssertEqual(conformer.cancelCallCount, 1)
   }
 }

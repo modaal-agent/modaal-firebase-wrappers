@@ -104,16 +104,20 @@ func exerciseFileStoring(_ file: CloudFileStoring) {
   file.putData(Data(), metadata: meta) { _ in }
   file.uploadFromFile(localURL: URL(fileURLWithPath: "/tmp/file"), metadata: meta) { _ in }
 
-  // Uploads with progress + cancel (canonical Tier 1).
+  // Uploads with progress + pause/resume/cancel.
   // CloudStorageUploadEvent is non-frozen — switches require @unknown default.
   let events: (CloudStorageUploadEvent) -> Void = { event in
     switch event {
     case .progress(let sent, let total): _ = (sent, total)
+    case .paused: break
+    case .resumed: break
     @unknown default: break
     }
   }
 
   let task1: CloudStorageUploadTaskProtocol = file.putData(Data(), events: events) { _ in }
+  task1.pause()
+  task1.resume()
   task1.cancel()
 
   let task2: CloudStorageUploadTaskProtocol =
@@ -207,7 +211,7 @@ func exerciseFileStoringCombine(_ file: CloudFileStoring) {
   let _: Future<Void, Error> = file.uploadFromFile(localURL: URL(fileURLWithPath: "/tmp/file"))
   let _: Future<Void, Error> = file.uploadFromFile(localURL: URL(fileURLWithPath: "/tmp/file"), metadata: CloudStorageMetadata(contentType: "image/png"))
 
-  // Uploads with progress (Combine projection of the events-based Tier 1).
+  // Uploads with progress.
   let _: AnyPublisher<CloudStorageUploadEvent, Error> = file.putDataWithProgress(Data())
   let _: AnyPublisher<CloudStorageUploadEvent, Error> =
     file.putDataWithProgress(Data(), metadata: CloudStorageMetadata(contentType: "image/png"))

@@ -175,6 +175,12 @@ public final class CloudStorageReference: CloudStorageReferencing {
         totalBytes: p?.totalUnitCount ?? 0
       ))
     }
+    task.observe(.pause) { _ in
+      events(.paused)
+    }
+    task.observe(.resume) { _ in
+      events(.resumed)
+    }
     task.observe(.success) { _ in
       completion(.success(()))
     }
