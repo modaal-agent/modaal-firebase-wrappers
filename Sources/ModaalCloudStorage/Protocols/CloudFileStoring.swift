@@ -48,6 +48,54 @@ public protocol CloudFileStoring {
   /// Asynchronously uploads a file with metadata (e.g., content type).
   func uploadFromFile(localURL: URL, metadata: CloudStorageMetadata, completion: @escaping (Result<Void, Error>) -> Void)
 
+  // MARK: - Upload with progress
+
+  /// Asynchronously uploads data while reporting determinate progress events
+  /// to `events`, and returns a handle that can cancel the in-flight upload.
+  ///
+  /// `events` is invoked one or more times with `.progress(...)` ticks until
+  /// the upload finishes via `completion` (success or failure). The handle
+  /// remains valid after completion; `cancel()` is idempotent.
+  ///
+  /// `CloudStorageUploadEvent` is non-frozen — switches over it MUST include
+  /// an `@unknown default` case to remain source-compatible with future
+  /// versions that may add new event cases.
+  @discardableResult
+  func putData(
+    _ data: Data,
+    events: @escaping (CloudStorageUploadEvent) -> Void,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) -> CloudStorageUploadTaskProtocol
+
+  /// Asynchronously uploads data with metadata while reporting determinate
+  /// progress events. See `putData(_:events:completion:)` for details.
+  @discardableResult
+  func putData(
+    _ data: Data,
+    metadata: CloudStorageMetadata,
+    events: @escaping (CloudStorageUploadEvent) -> Void,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) -> CloudStorageUploadTaskProtocol
+
+  /// Asynchronously uploads a file from disk while reporting determinate
+  /// progress events. See `putData(_:events:completion:)` for details.
+  @discardableResult
+  func uploadFromFile(
+    localURL: URL,
+    events: @escaping (CloudStorageUploadEvent) -> Void,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) -> CloudStorageUploadTaskProtocol
+
+  /// Asynchronously uploads a file from disk with metadata while reporting
+  /// determinate progress events. See `putData(_:events:completion:)` for details.
+  @discardableResult
+  func uploadFromFile(
+    localURL: URL,
+    metadata: CloudStorageMetadata,
+    events: @escaping (CloudStorageUploadEvent) -> Void,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) -> CloudStorageUploadTaskProtocol
+
   /// Asynchronously delete the object at the current path.
   func delete(completion: @escaping (Result<Void, Error>) -> Void)
 }

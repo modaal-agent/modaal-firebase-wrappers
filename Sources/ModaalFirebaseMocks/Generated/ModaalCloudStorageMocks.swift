@@ -71,6 +71,15 @@ class CloudFileStoringMock: CloudFileStoring {
     }
     var putDataCallCount: Int = 0
     var putDataHandler: ((_ data: Data, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func putData(_ data: Data, events: @escaping (CloudStorageUploadEvent) -> Void, completion: @escaping (Result<Void, Error>) -> Void) -> CloudStorageUploadTaskProtocol {
+        putDataDataEventsCompletionCallCount += 1
+        if let __putDataDataEventsCompletionHandler = self.putDataDataEventsCompletionHandler {
+            return __putDataDataEventsCompletionHandler(data, events, completion)
+        }
+        fatalError("putDataDataEventsCompletionHandler expected to be set.")
+    }
+    var putDataDataEventsCompletionCallCount: Int = 0
+    var putDataDataEventsCompletionHandler: ((_ data: Data, _ events: @escaping (CloudStorageUploadEvent) -> Void, _ completion: @escaping (Result<Void, Error>) -> Void) -> (CloudStorageUploadTaskProtocol))? = nil
     func putData(_ data: Data, metadata: CloudStorageMetadata, completion: @escaping (Result<Void, Error>) -> Void) {
         putDataDataMetadataCompletionCallCount += 1
         if let __putDataDataMetadataCompletionHandler = self.putDataDataMetadataCompletionHandler {
@@ -79,6 +88,15 @@ class CloudFileStoringMock: CloudFileStoring {
     }
     var putDataDataMetadataCompletionCallCount: Int = 0
     var putDataDataMetadataCompletionHandler: ((_ data: Data, _ metadata: CloudStorageMetadata, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func putData(_ data: Data, metadata: CloudStorageMetadata, events: @escaping (CloudStorageUploadEvent) -> Void, completion: @escaping (Result<Void, Error>) -> Void) -> CloudStorageUploadTaskProtocol {
+        putDataDataMetadataEventsCompletionCallCount += 1
+        if let __putDataDataMetadataEventsCompletionHandler = self.putDataDataMetadataEventsCompletionHandler {
+            return __putDataDataMetadataEventsCompletionHandler(data, metadata, events, completion)
+        }
+        fatalError("putDataDataMetadataEventsCompletionHandler expected to be set.")
+    }
+    var putDataDataMetadataEventsCompletionCallCount: Int = 0
+    var putDataDataMetadataEventsCompletionHandler: ((_ data: Data, _ metadata: CloudStorageMetadata, _ events: @escaping (CloudStorageUploadEvent) -> Void, _ completion: @escaping (Result<Void, Error>) -> Void) -> (CloudStorageUploadTaskProtocol))? = nil
     func updateMetadata(_ metadata: CloudStorageMetadata, completion: @escaping (Result<CloudStorageMetadata, Error>) -> Void) {
         updateMetadataCallCount += 1
         if let __updateMetadataHandler = self.updateMetadataHandler {
@@ -95,6 +113,15 @@ class CloudFileStoringMock: CloudFileStoring {
     }
     var uploadFromFileCallCount: Int = 0
     var uploadFromFileHandler: ((_ localURL: URL, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func uploadFromFile(localURL: URL, events: @escaping (CloudStorageUploadEvent) -> Void, completion: @escaping (Result<Void, Error>) -> Void) -> CloudStorageUploadTaskProtocol {
+        uploadFromFileLocalURLEventsCompletionCallCount += 1
+        if let __uploadFromFileLocalURLEventsCompletionHandler = self.uploadFromFileLocalURLEventsCompletionHandler {
+            return __uploadFromFileLocalURLEventsCompletionHandler(localURL, events, completion)
+        }
+        fatalError("uploadFromFileLocalURLEventsCompletionHandler expected to be set.")
+    }
+    var uploadFromFileLocalURLEventsCompletionCallCount: Int = 0
+    var uploadFromFileLocalURLEventsCompletionHandler: ((_ localURL: URL, _ events: @escaping (CloudStorageUploadEvent) -> Void, _ completion: @escaping (Result<Void, Error>) -> Void) -> (CloudStorageUploadTaskProtocol))? = nil
     func uploadFromFile(localURL: URL, metadata: CloudStorageMetadata, completion: @escaping (Result<Void, Error>) -> Void) {
         uploadFromFileLocalURLMetadataCompletionCallCount += 1
         if let __uploadFromFileLocalURLMetadataCompletionHandler = self.uploadFromFileLocalURLMetadataCompletionHandler {
@@ -103,6 +130,15 @@ class CloudFileStoringMock: CloudFileStoring {
     }
     var uploadFromFileLocalURLMetadataCompletionCallCount: Int = 0
     var uploadFromFileLocalURLMetadataCompletionHandler: ((_ localURL: URL, _ metadata: CloudStorageMetadata, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func uploadFromFile(localURL: URL, metadata: CloudStorageMetadata, events: @escaping (CloudStorageUploadEvent) -> Void, completion: @escaping (Result<Void, Error>) -> Void) -> CloudStorageUploadTaskProtocol {
+        uploadFromFileLocalURLMetadataEventsCompletionCallCount += 1
+        if let __uploadFromFileLocalURLMetadataEventsCompletionHandler = self.uploadFromFileLocalURLMetadataEventsCompletionHandler {
+            return __uploadFromFileLocalURLMetadataEventsCompletionHandler(localURL, metadata, events, completion)
+        }
+        fatalError("uploadFromFileLocalURLMetadataEventsCompletionHandler expected to be set.")
+    }
+    var uploadFromFileLocalURLMetadataEventsCompletionCallCount: Int = 0
+    var uploadFromFileLocalURLMetadataEventsCompletionHandler: ((_ localURL: URL, _ metadata: CloudStorageMetadata, _ events: @escaping (CloudStorageUploadEvent) -> Void, _ completion: @escaping (Result<Void, Error>) -> Void) -> (CloudStorageUploadTaskProtocol))? = nil
 }
 
 // MARK: - CloudStorageListResultProtocol
@@ -245,6 +281,15 @@ class CloudStorageReferencingMock: CloudStorageReferencing {
     }
     var putDataCallCount: Int = 0
     var putDataHandler: ((_ data: Data, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func putData(_ data: Data, events: @escaping (CloudStorageUploadEvent) -> Void, completion: @escaping (Result<Void, Error>) -> Void) -> CloudStorageUploadTaskProtocol {
+        putDataDataEventsCompletionCallCount += 1
+        if let __putDataDataEventsCompletionHandler = self.putDataDataEventsCompletionHandler {
+            return __putDataDataEventsCompletionHandler(data, events, completion)
+        }
+        fatalError("putDataDataEventsCompletionHandler expected to be set.")
+    }
+    var putDataDataEventsCompletionCallCount: Int = 0
+    var putDataDataEventsCompletionHandler: ((_ data: Data, _ events: @escaping (CloudStorageUploadEvent) -> Void, _ completion: @escaping (Result<Void, Error>) -> Void) -> (CloudStorageUploadTaskProtocol))? = nil
     func putData(_ data: Data, metadata: CloudStorageMetadata, completion: @escaping (Result<Void, Error>) -> Void) {
         putDataDataMetadataCompletionCallCount += 1
         if let __putDataDataMetadataCompletionHandler = self.putDataDataMetadataCompletionHandler {
@@ -253,6 +298,15 @@ class CloudStorageReferencingMock: CloudStorageReferencing {
     }
     var putDataDataMetadataCompletionCallCount: Int = 0
     var putDataDataMetadataCompletionHandler: ((_ data: Data, _ metadata: CloudStorageMetadata, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func putData(_ data: Data, metadata: CloudStorageMetadata, events: @escaping (CloudStorageUploadEvent) -> Void, completion: @escaping (Result<Void, Error>) -> Void) -> CloudStorageUploadTaskProtocol {
+        putDataDataMetadataEventsCompletionCallCount += 1
+        if let __putDataDataMetadataEventsCompletionHandler = self.putDataDataMetadataEventsCompletionHandler {
+            return __putDataDataMetadataEventsCompletionHandler(data, metadata, events, completion)
+        }
+        fatalError("putDataDataMetadataEventsCompletionHandler expected to be set.")
+    }
+    var putDataDataMetadataEventsCompletionCallCount: Int = 0
+    var putDataDataMetadataEventsCompletionHandler: ((_ data: Data, _ metadata: CloudStorageMetadata, _ events: @escaping (CloudStorageUploadEvent) -> Void, _ completion: @escaping (Result<Void, Error>) -> Void) -> (CloudStorageUploadTaskProtocol))? = nil
     func root() -> CloudStorageReferencing {
         rootCallCount += 1
         if let __rootHandler = self.rootHandler {
@@ -278,6 +332,15 @@ class CloudStorageReferencingMock: CloudStorageReferencing {
     }
     var uploadFromFileCallCount: Int = 0
     var uploadFromFileHandler: ((_ localURL: URL, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func uploadFromFile(localURL: URL, events: @escaping (CloudStorageUploadEvent) -> Void, completion: @escaping (Result<Void, Error>) -> Void) -> CloudStorageUploadTaskProtocol {
+        uploadFromFileLocalURLEventsCompletionCallCount += 1
+        if let __uploadFromFileLocalURLEventsCompletionHandler = self.uploadFromFileLocalURLEventsCompletionHandler {
+            return __uploadFromFileLocalURLEventsCompletionHandler(localURL, events, completion)
+        }
+        fatalError("uploadFromFileLocalURLEventsCompletionHandler expected to be set.")
+    }
+    var uploadFromFileLocalURLEventsCompletionCallCount: Int = 0
+    var uploadFromFileLocalURLEventsCompletionHandler: ((_ localURL: URL, _ events: @escaping (CloudStorageUploadEvent) -> Void, _ completion: @escaping (Result<Void, Error>) -> Void) -> (CloudStorageUploadTaskProtocol))? = nil
     func uploadFromFile(localURL: URL, metadata: CloudStorageMetadata, completion: @escaping (Result<Void, Error>) -> Void) {
         uploadFromFileLocalURLMetadataCompletionCallCount += 1
         if let __uploadFromFileLocalURLMetadataCompletionHandler = self.uploadFromFileLocalURLMetadataCompletionHandler {
@@ -286,6 +349,29 @@ class CloudStorageReferencingMock: CloudStorageReferencing {
     }
     var uploadFromFileLocalURLMetadataCompletionCallCount: Int = 0
     var uploadFromFileLocalURLMetadataCompletionHandler: ((_ localURL: URL, _ metadata: CloudStorageMetadata, _ completion: @escaping (Result<Void, Error>) -> Void) -> ())? = nil
+    func uploadFromFile(localURL: URL, metadata: CloudStorageMetadata, events: @escaping (CloudStorageUploadEvent) -> Void, completion: @escaping (Result<Void, Error>) -> Void) -> CloudStorageUploadTaskProtocol {
+        uploadFromFileLocalURLMetadataEventsCompletionCallCount += 1
+        if let __uploadFromFileLocalURLMetadataEventsCompletionHandler = self.uploadFromFileLocalURLMetadataEventsCompletionHandler {
+            return __uploadFromFileLocalURLMetadataEventsCompletionHandler(localURL, metadata, events, completion)
+        }
+        fatalError("uploadFromFileLocalURLMetadataEventsCompletionHandler expected to be set.")
+    }
+    var uploadFromFileLocalURLMetadataEventsCompletionCallCount: Int = 0
+    var uploadFromFileLocalURLMetadataEventsCompletionHandler: ((_ localURL: URL, _ metadata: CloudStorageMetadata, _ events: @escaping (CloudStorageUploadEvent) -> Void, _ completion: @escaping (Result<Void, Error>) -> Void) -> (CloudStorageUploadTaskProtocol))? = nil
+}
+
+// MARK: - CloudStorageUploadTaskProtocol
+class CloudStorageUploadTaskProtocolMock: CloudStorageUploadTaskProtocol {
+
+    // MARK: - Methods
+    func cancel() {
+        cancelCallCount += 1
+        if let __cancelHandler = self.cancelHandler {
+            __cancelHandler()
+        }
+    }
+    var cancelCallCount: Int = 0
+    var cancelHandler: (() -> ())? = nil
 }
 
 // MARK: - FileStoring

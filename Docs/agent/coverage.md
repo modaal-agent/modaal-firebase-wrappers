@@ -116,12 +116,16 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `fullPath` / `name` / `bucket` / `child(_:)` / `parent` / `root` | Wrapped. `child(_)` is the canonical Firebase iOS SDK signature (positional path); Swift-idiomatic `child(path:)` available via `Extensions/CloudStorageReferencing+Idioms.swift` (delegates to canonical) |
 | `getData` / `downloadToFile` / `downloadURL` | Wrapped. `downloadURL(completion:)` is the canonical Firebase iOS SDK name; Swift-idiomatic `getDownloadURL(completion:)` available via `Extensions/CloudFileStoring+Idioms.swift` (delegates to canonical) |
 | `putData` / `uploadFromFile` (with optional metadata) | Wrapped |
+| `putData` / `uploadFromFile` (with `events:` callback, returning `CloudStorageUploadTaskProtocol`) | Wrapped — determinate-progress + cancellable variants. Emit `CloudStorageUploadEvent.progress(...)` ticks; cancel handle exposes `cancel()`. Combine variants: `putDataWithProgress(_:)` / `uploadFromFileWithProgress(localURL:)` returning `AnyPublisher<CloudStorageUploadEvent, Error>`. `CloudStorageUploadEvent` is non-frozen — switches require `@unknown default` |
 | `getMetadata` / `updateMetadata` | Wrapped |
 | `delete` | Wrapped |
 | `listAll` | Wrapped |
 | `list(maxResults:)` / `list(maxResults:pageToken:)` | Escape hatch |
 | `Storage.storage()` default instance | Wrapped (`CloudStorageWrapper.makeDefault(emulator:)`) |
 | `Storage.useEmulator(host:port:)` | Wrapped via `makeDefault(emulator:)` |
+| `StorageUploadTask.cancel()` | Wrapped via `CloudStorageUploadTaskProtocol` |
+| `StorageUploadTask.pause()` / `.resume()` | **Not wrapped** — planned for Wave 2a |
+| `StorageUploadTask` resumable session URL | **Not wrapped** — planned for Wave 2b |
 
 **Escape hatch:** `CloudStorageWrapper.storage: Storage` (public), `CloudStorageReference.reference: StorageReference` (public)
 

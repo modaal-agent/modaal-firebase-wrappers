@@ -111,6 +111,79 @@ public final class CloudStorageReference: CloudStorageReferencing {
     }
   }
 
+  // MARK: - CloudFileStoring (uploads with progress)
+
+  @discardableResult
+  public func putData(
+    _ data: Data,
+    events: @escaping (CloudStorageUploadEvent) -> Void,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) -> CloudStorageUploadTaskProtocol {
+    observe(reference.putData(data), events: events, completion: completion)
+  }
+
+  @discardableResult
+  public func putData(
+    _ data: Data,
+    metadata: CloudStorageMetadata,
+    events: @escaping (CloudStorageUploadEvent) -> Void,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) -> CloudStorageUploadTaskProtocol {
+    observe(
+      reference.putData(data, metadata: metadata.toStorageMetadata()),
+      events: events,
+      completion: completion
+    )
+  }
+
+  @discardableResult
+  public func uploadFromFile(
+    localURL: URL,
+    events: @escaping (CloudStorageUploadEvent) -> Void,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) -> CloudStorageUploadTaskProtocol {
+    observe(reference.putFile(from: localURL), events: events, completion: completion)
+  }
+
+  @discardableResult
+  public func uploadFromFile(
+    localURL: URL,
+    metadata: CloudStorageMetadata,
+    events: @escaping (CloudStorageUploadEvent) -> Void,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) -> CloudStorageUploadTaskProtocol {
+    observe(
+      reference.putFile(from: localURL, metadata: metadata.toStorageMetadata()),
+      events: events,
+      completion: completion
+    )
+  }
+
+  /// Attaches `.progress`, `.success`, and `.failure` observers to a
+  /// Firebase `StorageUploadTask` and returns a typed cancel handle.
+  /// Firebase clears observers in `finishTaskWithStatus` on terminal states,
+  /// so no manual observer removal is required.
+  private func observe(
+    _ task: StorageUploadTask,
+    events: @escaping (CloudStorageUploadEvent) -> Void,
+    completion: @escaping (Result<Void, Error>) -> Void
+  ) -> CloudStorageUploadTaskProtocol {
+    task.observe(.progress) { snapshot in
+      let p = snapshot.progress
+      events(.progress(
+        bytesTransferred: p?.completedUnitCount ?? 0,
+        totalBytes: p?.totalUnitCount ?? 0
+      ))
+    }
+    task.observe(.success) { _ in
+      completion(.success(()))
+    }
+    task.observe(.failure) { snapshot in
+      completion(.failure(snapshot.error ?? NSError(domain: "Unknown error", code: -1)))
+    }
+    return CloudStorageUploadTask(task: task)
+  }
+
   // MARK: - CloudFileStoring (delete)
 
   public func delete(completion: @escaping (Result<Void, Error>) -> Void) {

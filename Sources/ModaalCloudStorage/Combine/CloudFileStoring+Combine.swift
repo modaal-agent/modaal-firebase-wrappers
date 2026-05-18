@@ -55,6 +55,78 @@ public extension CloudFileStoring {
     Future { promise in self.uploadFromFile(localURL: localURL, metadata: metadata) { promise($0) } }
   }
 
+  // MARK: - Upload with progress
+
+  /// Combine projection of `putData(_:events:completion:)`. The returned
+  /// publisher emits `CloudStorageUploadEvent.progress(...)` values during
+  /// the upload and finishes on success. Cancelling the subscription
+  /// cancels the underlying upload; no terminal event is emitted in that
+  /// case (canonical Combine semantic).
+  ///
+  /// Switches over the emitted events MUST include `@unknown default` since
+  /// `CloudStorageUploadEvent` is non-frozen.
+  func putDataWithProgress(_ data: Data) -> AnyPublisher<CloudStorageUploadEvent, Error> {
+    makeUploadPublisher { events, completion in
+      self.putData(data, events: events, completion: completion)
+    }
+  }
+
+  /// Combine projection of `putData(_:metadata:events:completion:)`.
+  /// See `putDataWithProgress(_:)` for cancellation semantics.
+  func putDataWithProgress(
+    _ data: Data,
+    metadata: CloudStorageMetadata
+  ) -> AnyPublisher<CloudStorageUploadEvent, Error> {
+    makeUploadPublisher { events, completion in
+      self.putData(data, metadata: metadata, events: events, completion: completion)
+    }
+  }
+
+  /// Combine projection of `uploadFromFile(localURL:events:completion:)`.
+  /// See `putDataWithProgress(_:)` for cancellation semantics.
+  func uploadFromFileWithProgress(localURL: URL) -> AnyPublisher<CloudStorageUploadEvent, Error> {
+    makeUploadPublisher { events, completion in
+      self.uploadFromFile(localURL: localURL, events: events, completion: completion)
+    }
+  }
+
+  /// Combine projection of `uploadFromFile(localURL:metadata:events:completion:)`.
+  /// See `putDataWithProgress(_:)` for cancellation semantics.
+  func uploadFromFileWithProgress(
+    localURL: URL,
+    metadata: CloudStorageMetadata
+  ) -> AnyPublisher<CloudStorageUploadEvent, Error> {
+    makeUploadPublisher { events, completion in
+      self.uploadFromFile(localURL: localURL, metadata: metadata, events: events, completion: completion)
+    }
+  }
+
+  private func makeUploadPublisher(
+    start: @escaping (
+      _ events: @escaping (CloudStorageUploadEvent) -> Void,
+      _ completion: @escaping (Result<Void, Error>) -> Void
+    ) -> CloudStorageUploadTaskProtocol
+  ) -> AnyPublisher<CloudStorageUploadEvent, Error> {
+    let subject = PassthroughSubject<CloudStorageUploadEvent, Error>()
+    var task: CloudStorageUploadTaskProtocol?
+    return subject
+      .handleEvents(
+        receiveSubscription: { _ in
+          task = start(
+            { event in subject.send(event) },
+            { result in
+              switch result {
+              case .success: subject.send(completion: .finished)
+              case .failure(let error): subject.send(completion: .failure(error))
+              }
+            }
+          )
+        },
+        receiveCancel: { task?.cancel() }
+      )
+      .eraseToAnyPublisher()
+  }
+
   // MARK: - Delete
 
   func delete() -> Future<Void, Error> {

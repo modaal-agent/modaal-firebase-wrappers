@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Added — ModaalCloudStorage: determinate-progress + cancellable uploads (Wave 1)
+
+- `CloudFileStoring` gains four progress-aware upload overloads — `putData(_:events:completion:)`, `putData(_:metadata:events:completion:)`, `uploadFromFile(localURL:events:completion:)`, `uploadFromFile(localURL:metadata:events:completion:)` — that report determinate progress via an `events:` callback and return a `CloudStorageUploadTaskProtocol` handle exposing `cancel()`. The existing fire-and-forget overloads remain for the common case.
+- `CloudStorageUploadEvent` enum carries `.progress(bytesTransferred:totalBytes:)` ticks. **Non-frozen** — switches over this enum MUST use `@unknown default` to remain source-compatible with future versions (Wave 2 will add `.paused` / `.resumed`).
+- `CloudStorageUploadTaskProtocol` — opaque cancel handle returned by the progress-aware methods. Wave 2 will add `pause()` / `resume()` with default no-op implementations so external conformers stay source-compatible.
+- Combine projections: `putDataWithProgress(_:)` / `putDataWithProgress(_:metadata:)` / `uploadFromFileWithProgress(localURL:)` / `uploadFromFileWithProgress(localURL:metadata:)` return `AnyPublisher<CloudStorageUploadEvent, Error>` emitting progress events and finishing on success. Cancelling the subscription cancels the underlying upload (no terminal event delivered on cancel — canonical Combine semantic).
+
 ## [2.0.0] — 2026-05-10
 
 ### Changed (formally breaking — see Semver below)
