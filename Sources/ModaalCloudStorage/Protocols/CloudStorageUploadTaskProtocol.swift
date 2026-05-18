@@ -15,6 +15,11 @@ public protocol CloudStorageUploadTaskProtocol: AnyObject {
   ///
   /// On cancellation, the original completion handler fires with
   /// `.failure(NSError)` where `code == -13040` (`StorageErrorCode.cancelled`).
+  ///
+  /// Event delivery is best-effort once `cancel()` has been requested — a
+  /// `.progress(...)` tick already enqueued on `Storage.callbackQueue` may
+  /// still fire before `completion(.failure(...))`. UI teardown that
+  /// observes events should be idempotent.
   func cancel()
 
   /// Pauses the in-flight upload. Idempotent — safe to call when already paused

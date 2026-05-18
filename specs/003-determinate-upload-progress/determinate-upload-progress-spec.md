@@ -631,3 +631,99 @@ If any concrete Wave 2 implementation step would force breaking a Wave 1 signatu
 1. **Threading documentation rollout across the rest of the wrappers.** Wave 1 added an explicit **Threading.** note to the new `CloudFileStoring` progress methods and `…WithProgress(…)` publishers (callbacks delivered on `Storage.callbackQueue`, default `DispatchQueue.main`). The pre-existing wrapper APIs — `ModaalFirebaseAuth`, `ModaalFirestore` (including `snapshotPublisher` family), `ModaalFirebaseRemoteConfig`, `ModaalFirebaseMessaging`, the non-progress `CloudFileStoring` overloads — don't document their callback queue. Consumers wiring callbacks straight to UI have to infer the queue from the SDK. Apply the same `**Threading.**` note convention across these surfaces in a follow-up PR; pull `Auth.auth().callbackQueue`, `Firestore.firestore().settings.dispatchQueue`, etc. into the doc comments.
 2. **Single-subscription contract.** The same single-subscription footgun applies to `DocumentReference+Combine.snapshotPublisher`, `Query+Combine.snapshotPublisher`, `RemoteConfig+Combine.configUpdates`, and `FirebaseAuth+Combine.authStateChanges`. Either document it consistently on each, or refactor the helpers to use `Deferred { Future { ... } }` / a shared streaming helper that's safe to re-subscribe.
 3. **Wave 2b — resumable upload session URL + status + persistence.** Stays on a separate branch until a real consumer asks for it. Plan is captured above; the first concrete step is the feasibility spike (`Docs/spike/resumable-upload-url.md`) before any production code.
+
+---
+
+# Polish round — pre-release feedback from first beta consumer
+
+First production-side integration (`modaal-vibereef`, [`specs/025-video-export-upload`](https://github.com/modaal-agent/modaal-vibereef-mv6v2/blob/main/specs/025-video-export-upload/spec.md), §"Wrapper-library wishlist") landed in one sitting without consulting the wrapper authors. The consumer explicitly confirmed:
+
+- Non-frozen enum + `@unknown default` doc directive in BOTH the enum and the Tier-2 method docs (the deliberate redundancy from earlier review).
+- `totalBytes == 0` divide-by-zero warning on `.progress`.
+- Single-subscription footgun documentation (why-not, not just the rule).
+- Threading note on every progress-aware method.
+- Pause/resume forward-compat via protocol-extension default no-ops.
+
+The consumer also walked back two API-shape suggestions from an earlier draft (a "Tier-3" `AnyPublisher<UploadProgress, Error>` with terminal `.completed(URL)` element, and a `.append(Just(...))` worked example). Both were correctly rejected on grounds the wrapper doesn't pick a URL shape (consumer policy) and a terminal element conflicts with cancellation semantics. **Reasoning recorded** so the same suggestions don't re-surface.
+
+The four remaining items below are doc-only / additive. Each is evaluated on its own merits — not all are worth shipping.
+
+### 1. Canonical consumer snippet — ACCEPT
+
+**The feedback.** Add a worked example showing the idiomatic `…WithProgress(…) → .compactMap → .removeDuplicates → .handleEvents → .reduce((), { _, _ in () })` pipeline. Two non-obvious moves: (a) `.reduce((), { _, _ in () })` as the canonical "wait for `.finished`, emit single `Void`" bridge, and (b) the explicit no-payload-on-completion design — consumers recompose any URL they need from their own state.
+
+**Challenge.**
+- Doc comments shouldn't carry multi-line code examples (they bloat hover-docs in Xcode and rot when surrounding code changes).
+- The Vibereef snippet is opinionated about UI architecture (`presenter` pattern, `removeDuplicates` cadence policy). Need to generalize.
+- *But:* the consumer explicitly named this "the single highest-ROI addition," and the `.reduce((), { _, _ in () })` bridge IS the one canonical idiom on a `Publisher<Event, Error> → AnyPublisher<Void, Error>` conversion — exactly the question the next integrator will hit when they ask "what's the success value on the streaming variant?" The answer ("there isn't one — completion via `.finished` is the signal, recompose any URL where you need it") is content that doesn't fit a one-liner.
+
+**Action.** Add a "Consuming the upload-progress publisher" section to `Docs/agent/patterns.md` under the existing Combine-layer subsection. Show:
+- The 8-line `.compactMap → .removeDuplicates → .reduce` pipeline.
+- A one-line explanation per non-obvious operator (why `compactMap` returns `Double?`, why `reduce` collapses to `Void`).
+- Explicit statement of the no-URL-on-completion design and why (URL shape is consumer policy).
+- Cross-reference from each `…WithProgress(_:)` doc comment as a single trailing line: `/// Consumer pattern: see Docs/agent/patterns.md § "Consuming the upload-progress publisher".`
+
+**Scope guardrails.** Do NOT include a SwiftUI / UIKit binding example — UI integration is consumer policy. Stop at the pipeline shape.
+
+### 2. Cadence note — ACCEPT in calibrated form
+
+**The feedback.** Add one sentence noting Firebase emits "tens to hundreds of events per upload" and consumers should quantize / `.removeDuplicates()`. The consumer reports they burned a design round on time-based `.throttle(...)` which collapsed synchronous test sequences.
+
+**Challenge.**
+- "Tens to hundreds" is anecdotal — it varies with payload size, chunk size, and network. Promising a specific cadence and then having Firebase change `GTMSessionUploadFetcher` defaults would make the doc wrong.
+- Recommending `.removeDuplicates()` over `.throttle(...)` is *cadence policy*, leaking into UI domain. The wrapper shouldn't legislate which Combine operator the consumer reaches for.
+- *But:* the failure mode the consumer describes is real and non-obvious — `.throttle(...)` interacts badly with `PassthroughSubject` test sequences because of `RunLoop` scheduling. Calling out that fact in one sentence prevents a guaranteed test-flakiness incident.
+
+**Action.** Add a one-sentence "Event cadence" note to `putDataWithProgress(_:)`'s doc comment (the canonical Combine variant). Suggested wording:
+
+> **Event cadence.** Firebase emits `.progress(...)` at the underlying byte-transfer granularity — high-frequency for large uploads. Quantize (e.g., to 1% buckets via `.removeDuplicates(by:)`) before driving UI; time-based throttling (`.throttle(...)`) is dependency-aware and may collapse synchronous test sequences.
+
+Other three Combine variants reference it via the existing "See `putDataWithProgress(_:)` for …" line — extend that line to mention cadence too.
+
+**Scope guardrails.** Do NOT add a similar note to the Tier-1 protocol methods — cadence is a Combine-consumer concern. Tier-1 callback consumers control their own batching.
+
+### 3. Mock helper for fake progress sequences — DEFER
+
+**The feedback.** Add `CloudFileStoringMock.stubUploadWithProgress(_ ticks:)` to eliminate hand-built `events`/`completion` dispatch in test boilerplate. The Sourcery-generated handler names (`uploadFromFileLocalURLMetadataEventsCompletionHandler`) are verbose.
+
+**Challenge.**
+- Net-new code, not doc-only. Hand-written extensions sitting alongside Sourcery-generated code in `ModaalFirebaseMocks` would be the first instance of that pattern in the repo (the existing mock module is generated-only). Setting a precedent here means other surfaces will request the same helper for their generated mocks; we'd be growing a parallel hand-written test-helper API alongside every Sourcery output.
+- The saved boilerplate is ~4 lines per test. The handler-naming verbosity is a Sourcery-template concern (repo-wide), not something to paper over per-surface.
+- *But:* the codified "emit-then-complete" shape IS the canonical mock dispatch pattern, and naming it explicitly would help readers.
+
+**Action.** Document the testing pattern in `Docs/agent/patterns.md` alongside the consumer snippet (item 1). A ~6-line snippet showing how to stub a mock handler to emit a progress sequence and then call completion. Same DX win as a helper function without growing the mock module surface or setting a "hand-written helpers in ModaalFirebaseMocks" precedent.
+
+**Revisit if.** A second consumer asks for the actual helper function, OR similar requests land for two other surfaces (Auth, Firestore). At that point the cross-cutting pattern justifies a shared `Test-helpers` module separate from `ModaalFirebaseMocks`.
+
+### 4. `cancel()` ordering clarification — ACCEPT
+
+**The feedback.** The doc says `completion` fires with `-13040` on cancel but doesn't say whether `.progress` events can still arrive *after* `cancel()` is called but before completion.
+
+**Challenge.**
+- We haven't formally verified Firebase's ordering guarantees here. Promising "no events after cancel" would be a contract we'd have to hold; if Firebase has a tick already enqueued on `callbackQueue` when `cancel()` is called, that tick will be delivered before the cancel-induced `.failure` because callbacks are serialized on that queue.
+- *But:* the question is real and a calibrated answer is short.
+
+**Action.** One sentence appended to the `cancel()` doc comment on `CloudStorageUploadTaskProtocol`:
+
+> Event delivery is best-effort once `cancel()` has been requested — a `.progress(...)` tick already enqueued on `Storage.callbackQueue` may still fire before `completion(.failure(...))`. UI teardown that observes events should be idempotent.
+
+No matching change to the Tier-1 protocol methods or Combine docs needed — `cancel()` is on the task protocol and `Combine`-side cancellation is already documented as "no terminal event delivered" elsewhere.
+
+### Polish-round scope summary
+
+| Item | Verdict | Touchpoint |
+|---|---|---|
+| 1 — Canonical consumer snippet | Accept | New section in `Docs/agent/patterns.md` + one-line cross-ref from each `…WithProgress(_:)` doc |
+| 2 — Cadence note | Accept (calibrated) | One paragraph on `putDataWithProgress(_:)` Combine doc |
+| 3 — Mock helper | Defer; document the pattern instead | Inline in the new `patterns.md` section |
+| 4 — `cancel()` ordering | Accept | One sentence on `CloudStorageUploadTaskProtocol.cancel()` doc |
+
+**Not changing as part of this polish round** (already discussed in feedback, no action needed):
+- The non-frozen-enum + `@unknown default` policy.
+- The `totalBytes == 0` warning on `.progress`.
+- Single-subscription footgun doc.
+- Threading note placement / wording.
+- Pause/resume forward-compat design.
+- API shape (no Tier-3 helper, no terminal `.completed(URL)` element — both explicitly walked back by the consumer).
+
+Estimated net change: ~40-60 lines of new prose in `patterns.md`, ~4 doc-comment lines in `CloudFileStoring+Combine.swift` and `CloudStorageUploadTaskProtocol.swift`. No new types, no new methods, no test changes.

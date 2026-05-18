@@ -75,8 +75,17 @@ public extension CloudFileStoring {
   /// is intentionally re-broadcast to multiple sinks; otherwise call the
   /// `…WithProgress(…)` method afresh per consumer.
   ///
+  /// **Event cadence.** Firebase emits `.progress(...)` at the underlying
+  /// byte-transfer granularity — high-frequency for large uploads.
+  /// Quantize (e.g., to 1% buckets via `.removeDuplicates(by:)`) before
+  /// driving UI; time-based throttling (`.throttle(...)`) is dependency-
+  /// aware and may collapse synchronous test sequences.
+  ///
   /// Switches over the emitted events MUST include `@unknown default` since
   /// `CloudStorageUploadEvent` is non-frozen.
+  ///
+  /// Canonical consumer pipeline: see `Docs/agent/patterns.md` § "Consuming
+  /// the upload-progress publisher".
   func putDataWithProgress(_ data: Data) -> AnyPublisher<CloudStorageUploadEvent, Error> {
     makeUploadPublisher { events, completion in
       self.putData(data, events: events, completion: completion)
@@ -84,8 +93,8 @@ public extension CloudFileStoring {
   }
 
   /// Combine projection of `putData(_:metadata:events:completion:)`.
-  /// See `putDataWithProgress(_:)` for threading, cancellation, and
-  /// single-subscription semantics.
+  /// See `putDataWithProgress(_:)` for threading, cancellation, cadence,
+  /// single-subscription semantics, and the canonical consumer pipeline.
   func putDataWithProgress(
     _ data: Data,
     metadata: CloudStorageMetadata
@@ -96,8 +105,8 @@ public extension CloudFileStoring {
   }
 
   /// Combine projection of `uploadFromFile(localURL:events:completion:)`.
-  /// See `putDataWithProgress(_:)` for threading, cancellation, and
-  /// single-subscription semantics.
+  /// See `putDataWithProgress(_:)` for threading, cancellation, cadence,
+  /// single-subscription semantics, and the canonical consumer pipeline.
   func uploadFromFileWithProgress(localURL: URL) -> AnyPublisher<CloudStorageUploadEvent, Error> {
     makeUploadPublisher { events, completion in
       self.uploadFromFile(localURL: localURL, events: events, completion: completion)
@@ -105,8 +114,8 @@ public extension CloudFileStoring {
   }
 
   /// Combine projection of `uploadFromFile(localURL:metadata:events:completion:)`.
-  /// See `putDataWithProgress(_:)` for threading, cancellation, and
-  /// single-subscription semantics.
+  /// See `putDataWithProgress(_:)` for threading, cancellation, cadence,
+  /// single-subscription semantics, and the canonical consumer pipeline.
   func uploadFromFileWithProgress(
     localURL: URL,
     metadata: CloudStorageMetadata
