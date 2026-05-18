@@ -51,11 +51,17 @@ public protocol CloudFileStoring {
   // MARK: - Upload with progress
 
   /// Asynchronously uploads data while reporting determinate progress events
-  /// to `events`, and returns a handle that can cancel the in-flight upload.
+  /// to `events`, and returns a handle that can `cancel()`, `pause()`, or
+  /// `resume()` the in-flight upload.
   ///
   /// `events` is invoked one or more times with `.progress(...)` ticks until
   /// the upload finishes via `completion` (success or failure). The handle
-  /// remains valid after completion; `cancel()` is idempotent.
+  /// remains valid after completion; `cancel()` / `pause()` / `resume()` are
+  /// idempotent.
+  ///
+  /// **Threading.** `events` and `completion` are delivered on Firebase's
+  /// `Storage.callbackQueue` (default: `DispatchQueue.main`). Marshal to a
+  /// different queue at the call site if needed.
   ///
   /// `CloudStorageUploadEvent` is non-frozen — switches over it MUST include
   /// an `@unknown default` case to remain source-compatible with future

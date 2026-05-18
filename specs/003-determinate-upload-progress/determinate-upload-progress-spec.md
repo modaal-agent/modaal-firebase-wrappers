@@ -206,6 +206,7 @@ The publisher emits whatever events the Tier-1 callback emits — so Wave 2's ne
 5. **Existing non-progress methods remain.** Not deprecated. The progress variant is purely additive.
 6. **No `@Sendable`.** Repo doesn't annotate completion closures `@Sendable`; stay consistent.
 7. **`CloudStorageUploadEvent` is non-frozen.** Doc comment explicitly directs consumers to use `@unknown default` in switches.
+8. **Single-subscription publishers (footgun).** `makeUploadPublisher(start:)` captures `subject` and `task` per publisher instance; re-subscribing to the same `AnyPublisher` value would call `start(...)` again, overwriting `task` and leaking the first upload (no way to cancel it from the second subscription's lifecycle). This matches the existing pattern in `DocumentReference+Combine.snapshotPublisher` and `Query+Combine.snapshotPublisher`. Documented on the public `…WithProgress(…)` methods and on the private `makeUploadPublisher` helper. Consumers wanting to re-broadcast must wrap with `.share()` / `.multicast(...)` themselves, with the understanding that the upload still runs exactly once.
 
 ## Verification — Wave 1
 
@@ -622,3 +623,11 @@ Wave 2 **adds** the following net-new public surface (no conflict with Wave 1):
 - `CloudStorageError.resumableSessionExpired`.
 
 If any concrete Wave 2 implementation step would force breaking a Wave 1 signature, that's a signal Wave 1's types need another revision before Wave 1 ships.
+
+---
+
+# Followups (out of scope for this PR)
+
+1. **Threading documentation rollout across the rest of the wrappers.** Wave 1 added an explicit **Threading.** note to the new `CloudFileStoring` progress methods and `…WithProgress(…)` publishers (callbacks delivered on `Storage.callbackQueue`, default `DispatchQueue.main`). The pre-existing wrapper APIs — `ModaalFirebaseAuth`, `ModaalFirestore` (including `snapshotPublisher` family), `ModaalFirebaseRemoteConfig`, `ModaalFirebaseMessaging`, the non-progress `CloudFileStoring` overloads — don't document their callback queue. Consumers wiring callbacks straight to UI have to infer the queue from the SDK. Apply the same `**Threading.**` note convention across these surfaces in a follow-up PR; pull `Auth.auth().callbackQueue`, `Firestore.firestore().settings.dispatchQueue`, etc. into the doc comments.
+2. **Single-subscription contract.** The same single-subscription footgun applies to `DocumentReference+Combine.snapshotPublisher`, `Query+Combine.snapshotPublisher`, `RemoteConfig+Combine.configUpdates`, and `FirebaseAuth+Combine.authStateChanges`. Either document it consistently on each, or refactor the helpers to use `Deferred { Future { ... } }` / a shared streaming helper that's safe to re-subscribe.
+3. **Wave 2b — resumable upload session URL + status + persistence.** Stays on a separate branch until a real consumer asks for it. Plan is captured above; the first concrete step is the feasibility spike (`Docs/spike/resumable-upload-url.md`) before any production code.

@@ -123,7 +123,7 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `list(maxResults:)` / `list(maxResults:pageToken:)` | Escape hatch |
 | `Storage.storage()` default instance | Wrapped (`CloudStorageWrapper.makeDefault(emulator:)`) |
 | `Storage.useEmulator(host:port:)` | Wrapped via `makeDefault(emulator:)` |
-| `StorageUploadTask.cancel()` / `.pause()` / `.resume()` | Wrapped via `CloudStorageUploadTaskProtocol`. `pause()` / `resume()` ship with default no-op implementations on the protocol extension so pre-Wave-2a conformers stay source-compatible. Pause/resume emit `.paused` / `.resumed` events through the same `events:` callback. Programmatic only — does NOT survive app suspension |
+| `StorageUploadTask.cancel()` / `.pause()` / `.resume()` | Wrapped via `CloudStorageUploadTaskProtocol`. `pause()` / `resume()` ship with default no-op implementations on the protocol extension so conformers that only implement `cancel()` stay source-compatible. Pause/resume emit `.paused` / `.resumed` events through the same `events:` callback. Programmatic only — does NOT survive app suspension |
 | `StorageUploadTask` resumable session URL | Escape hatch (consumer uses the underlying `StorageUploadTask` via the public `CloudStorageReference.reference: StorageReference` accessor) |
 
 **Escape hatch:** `CloudStorageWrapper.storage: Storage` (public), `CloudStorageReference.reference: StorageReference` (public)

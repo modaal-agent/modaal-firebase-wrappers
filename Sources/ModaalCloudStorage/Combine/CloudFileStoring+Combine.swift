@@ -63,6 +63,18 @@ public extension CloudFileStoring {
   /// cancels the underlying upload; no terminal event is emitted in that
   /// case (canonical Combine semantic).
   ///
+  /// **Threading.** Events and completion are delivered on Firebase's
+  /// `Storage.callbackQueue` (default: `DispatchQueue.main`). Chain
+  /// `.receive(on:)` if a different queue is required.
+  ///
+  /// **Single subscription.** The returned publisher is **not** multicast.
+  /// Each subscription starts a new upload, and subscribing twice to the
+  /// same publisher value leaks the first upload (the second subscription
+  /// overwrites the captured task handle, so the first can no longer be
+  /// cancelled). Use `.share()` / `.multicast(...)` only if the upstream
+  /// is intentionally re-broadcast to multiple sinks; otherwise call the
+  /// `…WithProgress(…)` method afresh per consumer.
+  ///
   /// Switches over the emitted events MUST include `@unknown default` since
   /// `CloudStorageUploadEvent` is non-frozen.
   func putDataWithProgress(_ data: Data) -> AnyPublisher<CloudStorageUploadEvent, Error> {
@@ -72,7 +84,8 @@ public extension CloudFileStoring {
   }
 
   /// Combine projection of `putData(_:metadata:events:completion:)`.
-  /// See `putDataWithProgress(_:)` for cancellation semantics.
+  /// See `putDataWithProgress(_:)` for threading, cancellation, and
+  /// single-subscription semantics.
   func putDataWithProgress(
     _ data: Data,
     metadata: CloudStorageMetadata
@@ -83,7 +96,8 @@ public extension CloudFileStoring {
   }
 
   /// Combine projection of `uploadFromFile(localURL:events:completion:)`.
-  /// See `putDataWithProgress(_:)` for cancellation semantics.
+  /// See `putDataWithProgress(_:)` for threading, cancellation, and
+  /// single-subscription semantics.
   func uploadFromFileWithProgress(localURL: URL) -> AnyPublisher<CloudStorageUploadEvent, Error> {
     makeUploadPublisher { events, completion in
       self.uploadFromFile(localURL: localURL, events: events, completion: completion)
@@ -91,7 +105,8 @@ public extension CloudFileStoring {
   }
 
   /// Combine projection of `uploadFromFile(localURL:metadata:events:completion:)`.
-  /// See `putDataWithProgress(_:)` for cancellation semantics.
+  /// See `putDataWithProgress(_:)` for threading, cancellation, and
+  /// single-subscription semantics.
   func uploadFromFileWithProgress(
     localURL: URL,
     metadata: CloudStorageMetadata
@@ -101,6 +116,13 @@ public extension CloudFileStoring {
     }
   }
 
+  /// Wraps an upload-task-returning Tier-1 method as a Combine publisher.
+  ///
+  /// Single-subscription only: `subject` and `task` are captured per
+  /// publisher instance, and a second subscription would overwrite the
+  /// captured task and leak the first. Same shape as the snapshot
+  /// publishers in `DocumentReference+Combine` / `Query+Combine` — see the
+  /// public `…WithProgress` docs for the contract surfaced to consumers.
   private func makeUploadPublisher(
     start: @escaping (
       _ events: @escaping (CloudStorageUploadEvent) -> Void,
