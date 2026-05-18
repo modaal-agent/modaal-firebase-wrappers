@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [2.1.0] — 2026-05-18
 
 ### Added — ModaalCloudStorage: determinate-progress, cancellable, pause/resume-able uploads
 
@@ -9,6 +9,12 @@
 - `CloudStorageUploadEvent` enum carries `.progress(bytesTransferred:totalBytes:)`, `.paused`, and `.resumed` events. **Non-frozen** — switches over this enum MUST use `@unknown default` to remain source-compatible with future versions.
 - Combine projections: `putDataWithProgress(_:)` / `putDataWithProgress(_:metadata:)` / `uploadFromFileWithProgress(localURL:)` / `uploadFromFileWithProgress(localURL:metadata:)` return `AnyPublisher<CloudStorageUploadEvent, Error>` emitting events and finishing on success. Cancelling the subscription cancels the underlying upload (no terminal event delivered on cancel — canonical Combine semantic).
 - Pause/resume is **programmatic only** — it does not survive app suspension. For uploads that need to survive app suspension, drop down to the underlying `StorageUploadTask` via `CloudStorageReference.reference` and drive the GCS resumable upload protocol from your own `URLSession`.
+
+### Documentation
+
+- **New [`Docs/agent/patterns.md` § "Consuming the upload-progress publisher"](Docs/agent/patterns.md#consuming-upload-progress)** — canonical 8-line consumer pipeline (`compactMap → removeDuplicates → handleEvents → reduce((), { _, _ in () })`), with operator-by-operator rationale, the no-payload-on-completion design (URL shape is consumer policy), and the test-side stub-emit-then-complete mock pattern.
+- **Doc-comment coverage** on the new public surface for threading semantics (`Storage.callbackQueue`, default `DispatchQueue.main`), the single-subscription contract on `…WithProgress(…)` publishers (each subscription starts a new upload; re-subscribing leaks the first), event cadence (high-frequency; quantize before driving UI, avoid time-based `.throttle(...)` for testability), and `cancel()` ordering (a `.progress` tick already enqueued on `callbackQueue` may still fire before `completion(.failure(...))`; UI teardown should be idempotent).
+- Distilled from pre-release feedback on the first beta-consumer integration; see [`specs/003-determinate-upload-progress`](specs/003-determinate-upload-progress/determinate-upload-progress-spec.md) § "Polish round" for the per-item evaluation.
 
 ## [2.0.0] — 2026-05-10
 
