@@ -55,6 +55,109 @@ public extension CloudFileStoring {
     Future { promise in self.uploadFromFile(localURL: localURL, metadata: metadata) { promise($0) } }
   }
 
+  // MARK: - Upload with progress
+
+  /// Combine projection of `putData(_:events:completion:)`. The returned
+  /// publisher emits `CloudStorageUploadEvent.progress(...)` values during
+  /// the upload and finishes on success. Cancelling the subscription
+  /// cancels the underlying upload; no terminal event is emitted in that
+  /// case (canonical Combine semantic).
+  ///
+  /// **Threading.** Events and completion are delivered on Firebase's
+  /// `Storage.callbackQueue` (default: `DispatchQueue.main`). Chain
+  /// `.receive(on:)` if a different queue is required.
+  ///
+  /// **Single subscription.** The returned publisher is **not** multicast.
+  /// Each subscription starts a new upload, and subscribing twice to the
+  /// same publisher value leaks the first upload (the second subscription
+  /// overwrites the captured task handle, so the first can no longer be
+  /// cancelled). Use `.share()` / `.multicast(...)` only if the upstream
+  /// is intentionally re-broadcast to multiple sinks; otherwise call the
+  /// `…WithProgress(…)` method afresh per consumer.
+  ///
+  /// **Event cadence.** Firebase emits `.progress(...)` at the underlying
+  /// byte-transfer granularity — high-frequency for large uploads.
+  /// Quantize (e.g., to 1% buckets via `.removeDuplicates(by:)`) before
+  /// driving UI; time-based throttling (`.throttle(...)`) is dependency-
+  /// aware and may collapse synchronous test sequences.
+  ///
+  /// Switches over the emitted events MUST include `@unknown default` since
+  /// `CloudStorageUploadEvent` is non-frozen.
+  ///
+  /// Canonical consumer pipeline: see `Docs/agent/patterns.md` § "Consuming
+  /// the upload-progress publisher".
+  func putDataWithProgress(_ data: Data) -> AnyPublisher<CloudStorageUploadEvent, Error> {
+    makeUploadPublisher { events, completion in
+      self.putData(data, events: events, completion: completion)
+    }
+  }
+
+  /// Combine projection of `putData(_:metadata:events:completion:)`.
+  /// See `putDataWithProgress(_:)` for threading, cancellation, cadence,
+  /// single-subscription semantics, and the canonical consumer pipeline.
+  func putDataWithProgress(
+    _ data: Data,
+    metadata: CloudStorageMetadata
+  ) -> AnyPublisher<CloudStorageUploadEvent, Error> {
+    makeUploadPublisher { events, completion in
+      self.putData(data, metadata: metadata, events: events, completion: completion)
+    }
+  }
+
+  /// Combine projection of `uploadFromFile(localURL:events:completion:)`.
+  /// See `putDataWithProgress(_:)` for threading, cancellation, cadence,
+  /// single-subscription semantics, and the canonical consumer pipeline.
+  func uploadFromFileWithProgress(localURL: URL) -> AnyPublisher<CloudStorageUploadEvent, Error> {
+    makeUploadPublisher { events, completion in
+      self.uploadFromFile(localURL: localURL, events: events, completion: completion)
+    }
+  }
+
+  /// Combine projection of `uploadFromFile(localURL:metadata:events:completion:)`.
+  /// See `putDataWithProgress(_:)` for threading, cancellation, cadence,
+  /// single-subscription semantics, and the canonical consumer pipeline.
+  func uploadFromFileWithProgress(
+    localURL: URL,
+    metadata: CloudStorageMetadata
+  ) -> AnyPublisher<CloudStorageUploadEvent, Error> {
+    makeUploadPublisher { events, completion in
+      self.uploadFromFile(localURL: localURL, metadata: metadata, events: events, completion: completion)
+    }
+  }
+
+  /// Wraps an upload-task-returning Tier-1 method as a Combine publisher.
+  ///
+  /// Single-subscription only: `subject` and `task` are captured per
+  /// publisher instance, and a second subscription would overwrite the
+  /// captured task and leak the first. Same shape as the snapshot
+  /// publishers in `DocumentReference+Combine` / `Query+Combine` — see the
+  /// public `…WithProgress` docs for the contract surfaced to consumers.
+  private func makeUploadPublisher(
+    start: @escaping (
+      _ events: @escaping (CloudStorageUploadEvent) -> Void,
+      _ completion: @escaping (Result<Void, Error>) -> Void
+    ) -> CloudStorageUploadTaskProtocol
+  ) -> AnyPublisher<CloudStorageUploadEvent, Error> {
+    let subject = PassthroughSubject<CloudStorageUploadEvent, Error>()
+    var task: CloudStorageUploadTaskProtocol?
+    return subject
+      .handleEvents(
+        receiveSubscription: { _ in
+          task = start(
+            { event in subject.send(event) },
+            { result in
+              switch result {
+              case .success: subject.send(completion: .finished)
+              case .failure(let error): subject.send(completion: .failure(error))
+              }
+            }
+          )
+        },
+        receiveCancel: { task?.cancel() }
+      )
+      .eraseToAnyPublisher()
+  }
+
   // MARK: - Delete
 
   func delete() -> Future<Void, Error> {

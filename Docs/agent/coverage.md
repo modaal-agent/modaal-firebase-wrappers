@@ -116,12 +116,15 @@ No escape hatch needed — Core is a thin bootstrap layer.
 | `fullPath` / `name` / `bucket` / `child(_:)` / `parent` / `root` | Wrapped. `child(_)` is the canonical Firebase iOS SDK signature (positional path); Swift-idiomatic `child(path:)` available via `Extensions/CloudStorageReferencing+Idioms.swift` (delegates to canonical) |
 | `getData` / `downloadToFile` / `downloadURL` | Wrapped. `downloadURL(completion:)` is the canonical Firebase iOS SDK name; Swift-idiomatic `getDownloadURL(completion:)` available via `Extensions/CloudFileStoring+Idioms.swift` (delegates to canonical) |
 | `putData` / `uploadFromFile` (with optional metadata) | Wrapped |
+| `putData` / `uploadFromFile` (with `events:` callback, returning `CloudStorageUploadTaskProtocol`) | Wrapped — determinate-progress + cancellable variants. Emit `CloudStorageUploadEvent.progress(...)` ticks; cancel handle exposes `cancel()`. Combine variants: `putDataWithProgress(_:)` / `uploadFromFileWithProgress(localURL:)` returning `AnyPublisher<CloudStorageUploadEvent, Error>`. `CloudStorageUploadEvent` is non-frozen — switches require `@unknown default` |
 | `getMetadata` / `updateMetadata` | Wrapped |
 | `delete` | Wrapped |
 | `listAll` | Wrapped |
 | `list(maxResults:)` / `list(maxResults:pageToken:)` | Escape hatch |
 | `Storage.storage()` default instance | Wrapped (`CloudStorageWrapper.makeDefault(emulator:)`) |
 | `Storage.useEmulator(host:port:)` | Wrapped via `makeDefault(emulator:)` |
+| `StorageUploadTask.cancel()` / `.pause()` / `.resume()` | Wrapped via `CloudStorageUploadTaskProtocol`. `pause()` / `resume()` ship with default no-op implementations on the protocol extension so conformers that only implement `cancel()` stay source-compatible. Pause/resume emit `.paused` / `.resumed` events through the same `events:` callback. Programmatic only — does NOT survive app suspension |
+| `StorageUploadTask` resumable session URL | Escape hatch (consumer uses the underlying `StorageUploadTask` via the public `CloudStorageReference.reference: StorageReference` accessor) |
 
 **Escape hatch:** `CloudStorageWrapper.storage: Storage` (public), `CloudStorageReference.reference: StorageReference` (public)
 

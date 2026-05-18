@@ -115,6 +115,59 @@ Migration shapes:
 
 Combine extensions are protocol default implementations, so they work with both real wrappers and mock objects.
 
+## Consuming the upload-progress publisher {#consuming-upload-progress}
+
+`putDataWithProgress(_:)` / `uploadFromFileWithProgress(localURL:)` (and metadata variants) return `AnyPublisher<CloudStorageUploadEvent, Error>`. The canonical consumer pipeline:
+
+```swift
+import Combine
+import ModaalCloudStorage
+
+func upload(_ data: Data, to ref: CloudFileStoring) -> AnyPublisher<Void, Error> {
+  ref.putDataWithProgress(data)
+    .compactMap { event -> Double? in
+      switch event {
+      case .progress(let bytes, let total):
+        guard total > 0 else { return nil }
+        return min(1.0, max(0.0, Double(bytes) / Double(total)))
+      case .paused, .resumed:
+        return nil
+      @unknown default:
+        return nil
+      }
+    }
+    .removeDuplicates()
+    .handleEvents(receiveOutput: { fraction in
+      // drive a progress view, log, etc.
+    })
+    .reduce((), { _, _ in () })
+    .eraseToAnyPublisher()
+}
+```
+
+Two non-obvious moves:
+
+- **`.reduce((), { _, _ in () })`** is the canonical bridge from "stream of events ending in `.finished`" to "single `Void` on completion." It absorbs every upstream value and emits exactly once when the upstream finishes — preserving error propagation. Use it whenever you need to compose a `Publisher<Event, Error>` into `AnyPublisher<Void, Error>`.
+- **No payload on completion.** The publisher finishes via `.finished` with no value — mirroring the non-progress `putData(_:) -> Future<Void, Error>` uploads. The wrapper deliberately does not pick a URL shape because the right shape is consumer policy: Firebase's `getDownloadURL()` returns a pre-signed token URL, but consumers with bucket-public reads compose stable `https://storage.googleapis.com/<bucket>/<path>` URLs themselves, and consumers with custom domains or CDN proxies want yet another shape. Recompose the URL where you need it; chain `.flatMap { _ in ref.downloadURL() }` (Combine variant of `downloadURL(completion:)`) if the token-URL form fits.
+
+The `@unknown default` arm is required, not optional — `CloudStorageUploadEvent` is non-frozen so future versions may add cases, and the compiler refuses to elide the case without an explicit `@unknown default`.
+
+### Testing consumers of the upload-progress publisher
+
+Stub the Tier-1 handler to drive a fixed event sequence:
+
+```swift
+let task = CloudStorageUploadTaskProtocolMock()
+mock.putDataDataEventsCompletionHandler = { _, events, completion in
+  events(.progress(bytesTransferred: 50, totalBytes: 100))
+  events(.progress(bytesTransferred: 100, totalBytes: 100))
+  completion(.success(()))
+  return task
+}
+```
+
+When testing the Combine projection (`putDataWithProgress(_:)`), **capture** the `events` / `completion` handlers in the mock and fire them *after* `.sink` has subscribed — `PassthroughSubject` drops sends that arrive before downstream demand is registered. See `CloudStorageSignatureParityTests` for the established pattern.
+
 ## Escape hatches
 
 Every entry-point wrapper exposes the underlying Firebase type as a `public` property. Use this for APIs not yet covered by the wrapper:

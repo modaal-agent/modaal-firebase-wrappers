@@ -15,3 +15,5 @@ extension CloudStorageListResultProtocol {}
 extension CloudFileStoring {}
 /// sourcery: CreateMock
 extension FileStoring {}
+/// sourcery: CreateMock
+extension CloudStorageUploadTaskProtocol {}

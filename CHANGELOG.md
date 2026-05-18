@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Added — ModaalCloudStorage: determinate-progress, cancellable, pause/resume-able uploads
+
+- `CloudFileStoring` gains four progress-aware upload overloads — `putData(_:events:completion:)`, `putData(_:metadata:events:completion:)`, `uploadFromFile(localURL:events:completion:)`, `uploadFromFile(localURL:metadata:events:completion:)` — that report determinate progress via an `events:` callback and return a `CloudStorageUploadTaskProtocol` handle exposing `cancel()`, `pause()`, and `resume()`. The existing fire-and-forget overloads remain for the common case.
+- `CloudStorageUploadTaskProtocol` — opaque task handle. `pause()` and `resume()` ship with default no-op implementations on a protocol extension so external conformers that only implement `cancel()` remain source-compatible.
+- `CloudStorageUploadEvent` enum carries `.progress(bytesTransferred:totalBytes:)`, `.paused`, and `.resumed` events. **Non-frozen** — switches over this enum MUST use `@unknown default` to remain source-compatible with future versions.
+- Combine projections: `putDataWithProgress(_:)` / `putDataWithProgress(_:metadata:)` / `uploadFromFileWithProgress(localURL:)` / `uploadFromFileWithProgress(localURL:metadata:)` return `AnyPublisher<CloudStorageUploadEvent, Error>` emitting events and finishing on success. Cancelling the subscription cancels the underlying upload (no terminal event delivered on cancel — canonical Combine semantic).
+- Pause/resume is **programmatic only** — it does not survive app suspension. For uploads that need to survive app suspension, drop down to the underlying `StorageUploadTask` via `CloudStorageReference.reference` and drive the GCS resumable upload protocol from your own `URLSession`.
+
 ## [2.0.0] — 2026-05-10
 
 ### Changed (formally breaking — see Semver below)

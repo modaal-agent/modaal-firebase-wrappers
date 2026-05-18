@@ -49,6 +49,120 @@ final class CloudStorageIntegrationTests: XCTestCase {
     }
   }
 
+  // MARK: - Upload with progress
+
+  func testPutDataReportsProgressAndCompletes() async throws {
+    let ref: CloudStorageReferencing = storage.reference(withPath: "integ/\(UUID().uuidString).bin")
+    // ~1 MiB so the emulator emits multiple progress ticks reliably.
+    let payload = Data(repeating: 0x41, count: 1024 * 1024)
+
+    let lock = NSLock()
+    var progressTicks: [(Int64, Int64)] = []
+
+    try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+      _ = ref.putData(
+        payload,
+        events: { event in
+          if case .progress(let sent, let total) = event {
+            lock.lock()
+            progressTicks.append((sent, total))
+            lock.unlock()
+          }
+        },
+        completion: { cont.resume(with: $0) }
+      )
+    }
+
+    XCTAssertFalse(progressTicks.isEmpty, "Expected at least one progress event")
+    let last = progressTicks.last!
+    XCTAssertEqual(last.0, Int64(payload.count), "Final bytesTransferred should equal payload size")
+    XCTAssertEqual(last.1, Int64(payload.count), "Final totalBytes should equal payload size")
+
+    try await delete(ref)
+  }
+
+  func testPutDataCancelSurfacesFailure() async throws {
+    let ref: CloudStorageReferencing = storage.reference(withPath: "integ/\(UUID().uuidString).bin")
+    // Large enough that the upload is unlikely to finish before we cancel.
+    let payload = Data(repeating: 0x42, count: 8 * 1024 * 1024)
+
+    let result = await withCheckedContinuation { (cont: CheckedContinuation<Result<Void, Error>, Never>) in
+      let task = ref.putData(
+        payload,
+        events: { _ in },
+        completion: { cont.resume(returning: $0) }
+      )
+      // Cancel on the next runloop tick — after the upload starts, before completion.
+      DispatchQueue.main.async { task.cancel() }
+    }
+
+    switch result {
+    case .success:
+      XCTFail("Expected cancellation to surface as .failure")
+    case .failure(let error):
+      let ns = error as NSError
+      // StorageErrorCode.cancelled == -13040
+      XCTAssertEqual(ns.code, -13040, "Expected StorageErrorCode.cancelled, got \(ns)")
+    }
+
+    // Best-effort cleanup; the object may or may not exist depending on cancel timing.
+    try? await delete(ref)
+  }
+
+  // MARK: - Upload pause/resume
+
+  func testPutDataPauseAndResumeReachesCompletion() async throws {
+    let ref: CloudStorageReferencing = storage.reference(withPath: "integ/\(UUID().uuidString).bin")
+    // Multi-MiB so the upload is in-flight long enough to observe pause/resume.
+    let payload = Data(repeating: 0x43, count: 8 * 1024 * 1024)
+
+    final class State: @unchecked Sendable {
+      let lock = NSLock()
+      var pauseSeen = false
+      var resumeSeen = false
+      var onPaused: (() -> Void)?
+      var task: CloudStorageUploadTaskProtocol?
+    }
+    let state = State()
+
+    try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+      state.task = ref.putData(
+        payload,
+        events: { event in
+          state.lock.lock()
+          defer { state.lock.unlock() }
+          switch event {
+          case .paused:
+            state.pauseSeen = true
+            // Resume on the next runloop tick to give the pause observer
+            // a chance to settle before the resume request fires.
+            let onPaused = state.onPaused
+            state.onPaused = nil
+            DispatchQueue.main.async { onPaused?() }
+          case .resumed:
+            state.resumeSeen = true
+          default:
+            break
+          }
+        },
+        completion: { cont.resume(with: $0) }
+      )
+
+      state.onPaused = {
+        state.task?.resume()
+      }
+      // Pause shortly after the upload starts so it has data in-flight to pause.
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+        state.task?.pause()
+      }
+    }
+
+    XCTAssertTrue(state.pauseSeen, "Expected .paused event during upload")
+    XCTAssertTrue(state.resumeSeen, "Expected .resumed event during upload")
+
+    try await delete(ref)
+  }
+
   // MARK: - Protocol-only async helpers
 
   private func put(_ ref: CloudStorageReferencing, _ data: Data) async throws {
