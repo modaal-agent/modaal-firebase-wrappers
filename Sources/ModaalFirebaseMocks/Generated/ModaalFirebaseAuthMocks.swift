@@ -7,14 +7,14 @@ import UIKit
 @testable import ModaalFirebaseAuth
 
 // MARK: - FirebaseAuthCredentialProtocol
-class FirebaseAuthCredentialProtocolMock: FirebaseAuthCredentialProtocol {
+final class FirebaseAuthCredentialProtocolMock: FirebaseAuthCredentialProtocol {
 
     // MARK: - Variables
     var provider: String = ""
 }
 
 // MARK: - FirebaseAuthDataResultProtocol
-class FirebaseAuthDataResultProtocolMock: FirebaseAuthDataResultProtocol {
+final class FirebaseAuthDataResultProtocolMock: FirebaseAuthDataResultProtocol {
 
     // MARK: - Variables
     var credential: FirebaseAuthCredentialProtocol? = nil
@@ -27,7 +27,7 @@ class FirebaseAuthDataResultProtocolMock: FirebaseAuthDataResultProtocol {
 }
 
 // MARK: - FirebaseAuthProtocol
-class FirebaseAuthProtocolMock: FirebaseAuthProtocol {
+final class FirebaseAuthProtocolMock: FirebaseAuthProtocol {
 
     // MARK: - Variables
     var currentUser: FirebaseUserProtocol? = nil
@@ -157,7 +157,7 @@ class FirebaseAuthProtocolMock: FirebaseAuthProtocol {
 }
 
 // MARK: - FirebaseAuthTokenResultProtocol
-class FirebaseAuthTokenResultProtocolMock: FirebaseAuthTokenResultProtocol {
+final class FirebaseAuthTokenResultProtocolMock: FirebaseAuthTokenResultProtocol {
 
     // MARK: - Variables
     var authDate: Date
@@ -176,7 +176,7 @@ class FirebaseAuthTokenResultProtocolMock: FirebaseAuthTokenResultProtocol {
 }
 
 // MARK: - FirebaseUserInfoProtocol
-class FirebaseUserInfoProtocolMock: FirebaseUserInfoProtocol {
+final class FirebaseUserInfoProtocolMock: FirebaseUserInfoProtocol {
 
     // MARK: - Variables
     var displayName: String? = nil
@@ -188,7 +188,7 @@ class FirebaseUserInfoProtocolMock: FirebaseUserInfoProtocol {
 }
 
 // MARK: - FirebaseUserMetadataProtocol
-class FirebaseUserMetadataProtocolMock: FirebaseUserMetadataProtocol {
+final class FirebaseUserMetadataProtocolMock: FirebaseUserMetadataProtocol {
 
     // MARK: - Variables
     var creationDate: Date? = nil
@@ -196,7 +196,7 @@ class FirebaseUserMetadataProtocolMock: FirebaseUserMetadataProtocol {
 }
 
 // MARK: - FirebaseUserProtocol
-class FirebaseUserProtocolMock: FirebaseUserProtocol {
+final class FirebaseUserProtocolMock: FirebaseUserProtocol {
 
     // MARK: - Variables
     var displayName: String? = nil

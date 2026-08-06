@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed — generated mocks are `final`
+
+- **`scripts/generate-mocks.sh` re-pinned to `swift-sourcery-templates` 0.2.15** (from 0.2.14) and mocks regenerated. The entire diff across the 34 generated mocks is `class XMock` → `final class XMock` — 34 lines, no other change — because none of this package's protocols use the constructs 0.2.15 adds ([its CHANGELOG](https://github.com/ivanmisuno/swift-sourcery-templates/blob/master/CHANGELOG.md#0215--2026-08-06): `async` and actor-isolation preservation, Combine `AnyPublisher` subjects, `@Sendable` closure parameters, `@unchecked Sendable` on `Sendable`-refining protocols).
+- **Breaking for anyone subclassing a generated mock** — `final` forbids it. Set the mock's `<method>Handler` closure instead, which is the supported way to control behaviour. No call site in this repo subclasses one.
+- **Fixed the mock count printed by `scripts/generate-mocks.sh`.** It matched `^class .*Mock`, which stopped matching once mocks became `final`, so every module reported `0 mocks` while generating correctly. It now matches both forms.
+
+Verified with a library-target build, a SampleApp build, and the package test suite on the regenerated mocks.
+
 ## [2.1.0] — 2026-05-18
 
 ### Added — ModaalCloudStorage: determinate-progress, cancellable, pause/resume-able uploads

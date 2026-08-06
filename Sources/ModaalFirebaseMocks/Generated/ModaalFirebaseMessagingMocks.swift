@@ -6,7 +6,7 @@ import Foundation
 @testable import ModaalFirebaseMessaging
 
 // MARK: - FirebaseMessagingProtocol
-class FirebaseMessagingProtocolMock: FirebaseMessagingProtocol {
+final class FirebaseMessagingProtocolMock: FirebaseMessagingProtocol {
 
     // MARK: - Variables
     var apnsToken: Data? = nil {

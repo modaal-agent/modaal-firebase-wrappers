@@ -6,7 +6,7 @@ import Foundation
 @testable import ModaalFirebaseAnalytics
 
 // MARK: - FirebaseAnalyticsProtocol
-class FirebaseAnalyticsProtocolMock: FirebaseAnalyticsProtocol {
+final class FirebaseAnalyticsProtocolMock: FirebaseAnalyticsProtocol {
 
     // MARK: - Methods
     func logEvent(name: String, parameters: [String: Any]?) {

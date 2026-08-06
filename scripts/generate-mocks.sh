@@ -6,7 +6,7 @@ GIT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # ── Configuration ─────────────────────────────────────────────────
 TEMPLATES_REPO="https://github.com/ivanmisuno/swift-sourcery-templates.git"
-TEMPLATES_TAG="0.2.14"
+TEMPLATES_TAG="0.2.15"
 TEMPLATES_CACHE="$GIT_ROOT/.build/swift-sourcery-templates"
 
 # Override TEMPLATES_DIR to point at a local checkout for iteration:
@@ -83,7 +83,8 @@ generate_module() {
 
   if [ -f "$output_file" ]; then
     local count
-    count=$(grep -c "^class .*Mock" "$output_file" 2>/dev/null || echo "0")
+    # Templates 0.2.15 emit `final class`; earlier versions emitted `class`.
+    count=$(grep -cE "^(final )?class .*Mock" "$output_file" 2>/dev/null || echo "0")
     echo "  → $output_file ($count mocks)"
   else
     echo "  → No output generated"

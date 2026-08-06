@@ -6,7 +6,7 @@ import Foundation
 @testable import ModaalFirebaseRemoteConfig
 
 // MARK: - FirebaseRemoteConfigProtocol
-class FirebaseRemoteConfigProtocolMock: FirebaseRemoteConfigProtocol {
+final class FirebaseRemoteConfigProtocolMock: FirebaseRemoteConfigProtocol {
 
     // MARK: - Variables
     var lastFetchStatus: ModaalRemoteConfigFetchStatus
@@ -86,7 +86,7 @@ class FirebaseRemoteConfigProtocolMock: FirebaseRemoteConfigProtocol {
 }
 
 // MARK: - RemoteConfigListenerRegistration
-class RemoteConfigListenerRegistrationMock: RemoteConfigListenerRegistration {
+final class RemoteConfigListenerRegistrationMock: RemoteConfigListenerRegistration {
 
     // MARK: - Methods
     func remove() {
@@ -100,14 +100,14 @@ class RemoteConfigListenerRegistrationMock: RemoteConfigListenerRegistration {
 }
 
 // MARK: - RemoteConfigUpdateProtocol
-class RemoteConfigUpdateProtocolMock: RemoteConfigUpdateProtocol {
+final class RemoteConfigUpdateProtocolMock: RemoteConfigUpdateProtocol {
 
     // MARK: - Variables
     var updatedKeys: Set<String> = Set()
 }
 
 // MARK: - RemoteConfigValueProtocol
-class RemoteConfigValueProtocolMock: RemoteConfigValueProtocol {
+final class RemoteConfigValueProtocolMock: RemoteConfigValueProtocol {
 
     // MARK: - Variables
     var boolValue: Bool = false

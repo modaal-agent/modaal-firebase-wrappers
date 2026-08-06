@@ -6,7 +6,7 @@ import Foundation
 @testable import ModaalFirebaseCrashlytics
 
 // MARK: - FirebaseCrashlyticsProtocol
-class FirebaseCrashlyticsProtocolMock: FirebaseCrashlyticsProtocol {
+final class FirebaseCrashlyticsProtocolMock: FirebaseCrashlyticsProtocol {
 
     // MARK: - Methods
     func log(_ message: String) {

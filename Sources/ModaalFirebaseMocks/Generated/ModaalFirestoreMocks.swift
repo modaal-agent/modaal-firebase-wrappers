@@ -6,7 +6,7 @@ import Foundation
 @testable import ModaalFirestore
 
 // MARK: - AggregateQueryProtocol
-class AggregateQueryProtocolMock: AggregateQueryProtocol {
+final class AggregateQueryProtocolMock: AggregateQueryProtocol {
 
     // MARK: - Methods
     func getAggregation(source: FirestoreAggregateSource, completion: @escaping (Result<Int, Error>) -> Void) {
@@ -20,7 +20,7 @@ class AggregateQueryProtocolMock: AggregateQueryProtocol {
 }
 
 // MARK: - CollectionReferenceProtocol
-class CollectionReferenceProtocolMock: CollectionReferenceProtocol {
+final class CollectionReferenceProtocolMock: CollectionReferenceProtocol {
 
     // MARK: - Variables
     var collectionID: String = ""
@@ -196,7 +196,7 @@ class CollectionReferenceProtocolMock: CollectionReferenceProtocol {
 }
 
 // MARK: - DocumentChangeProtocol
-class DocumentChangeProtocolMock: DocumentChangeProtocol {
+final class DocumentChangeProtocolMock: DocumentChangeProtocol {
 
     // MARK: - Variables
     var document: QueryDocumentSnapshotProtocol
@@ -212,7 +212,7 @@ class DocumentChangeProtocolMock: DocumentChangeProtocol {
 }
 
 // MARK: - DocumentReferenceProtocol
-class DocumentReferenceProtocolMock: DocumentReferenceProtocol {
+final class DocumentReferenceProtocolMock: DocumentReferenceProtocol {
 
     // MARK: - Variables
     var documentID: String = ""
@@ -302,7 +302,7 @@ class DocumentReferenceProtocolMock: DocumentReferenceProtocol {
 }
 
 // MARK: - DocumentSnapshotProtocol
-class DocumentSnapshotProtocolMock: DocumentSnapshotProtocol {
+final class DocumentSnapshotProtocolMock: DocumentSnapshotProtocol {
 
     // MARK: - Variables
     var documentID: String = ""
@@ -338,7 +338,7 @@ class DocumentSnapshotProtocolMock: DocumentSnapshotProtocol {
 }
 
 // MARK: - FirestoreProtocol
-class FirestoreProtocolMock: FirestoreProtocol {
+final class FirestoreProtocolMock: FirestoreProtocol {
 
     // MARK: - Methods
     func batch() -> WriteBatchProtocol {
@@ -388,7 +388,7 @@ class FirestoreProtocolMock: FirestoreProtocol {
 }
 
 // MARK: - ListenerRegistrationProtocol
-class ListenerRegistrationProtocolMock: ListenerRegistrationProtocol {
+final class ListenerRegistrationProtocolMock: ListenerRegistrationProtocol {
 
     // MARK: - Methods
     func remove() {
@@ -402,7 +402,7 @@ class ListenerRegistrationProtocolMock: ListenerRegistrationProtocol {
 }
 
 // MARK: - QueryDocumentSnapshotProtocol
-class QueryDocumentSnapshotProtocolMock: QueryDocumentSnapshotProtocol {
+final class QueryDocumentSnapshotProtocolMock: QueryDocumentSnapshotProtocol {
 
     // MARK: - Variables
     var documentID: String = ""
@@ -447,7 +447,7 @@ class QueryDocumentSnapshotProtocolMock: QueryDocumentSnapshotProtocol {
 }
 
 // MARK: - QueryProtocol
-class QueryProtocolMock: QueryProtocol {
+final class QueryProtocolMock: QueryProtocol {
 
     // MARK: - Variables
     var count: AggregateQueryProtocol
@@ -594,7 +594,7 @@ class QueryProtocolMock: QueryProtocol {
 }
 
 // MARK: - QuerySnapshotProtocol
-class QuerySnapshotProtocolMock: QuerySnapshotProtocol {
+final class QuerySnapshotProtocolMock: QuerySnapshotProtocol {
 
     // MARK: - Variables
     var count: Int = 0
@@ -610,7 +610,7 @@ class QuerySnapshotProtocolMock: QuerySnapshotProtocol {
 }
 
 // MARK: - SnapshotMetadataProtocol
-class SnapshotMetadataProtocolMock: SnapshotMetadataProtocol {
+final class SnapshotMetadataProtocolMock: SnapshotMetadataProtocol {
 
     // MARK: - Variables
     var hasPendingWrites: Bool = false
@@ -618,7 +618,7 @@ class SnapshotMetadataProtocolMock: SnapshotMetadataProtocol {
 }
 
 // MARK: - TransactionProtocol
-class TransactionProtocolMock: TransactionProtocol {
+final class TransactionProtocolMock: TransactionProtocol {
 
     // MARK: - Methods
     func deleteDocument(_ document: DocumentReferenceProtocol) {
@@ -673,7 +673,7 @@ class TransactionProtocolMock: TransactionProtocol {
 }
 
 // MARK: - WriteBatchProtocol
-class WriteBatchProtocolMock: WriteBatchProtocol {
+final class WriteBatchProtocolMock: WriteBatchProtocol {
 
     // MARK: - Methods
     func commit(completion: @escaping (Result<Void, Error>) -> Void) {

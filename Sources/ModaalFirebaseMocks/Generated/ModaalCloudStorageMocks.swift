@@ -6,7 +6,7 @@ import Foundation
 @testable import ModaalCloudStorage
 
 // MARK: - CloudCollectionStoring
-class CloudCollectionStoringMock: CloudCollectionStoring {
+final class CloudCollectionStoringMock: CloudCollectionStoring {
 
     // MARK: - Methods
     func listAll(completion: @escaping (Result<CloudStorageListResultProtocol, Error>) -> Void) {
@@ -20,7 +20,7 @@ class CloudCollectionStoringMock: CloudCollectionStoring {
 }
 
 // MARK: - CloudFileStoring
-class CloudFileStoringMock: CloudFileStoring {
+final class CloudFileStoringMock: CloudFileStoring {
 
     // MARK: - Methods
     func delete(completion: @escaping (Result<Void, Error>) -> Void) {
@@ -142,7 +142,7 @@ class CloudFileStoringMock: CloudFileStoring {
 }
 
 // MARK: - CloudStorageListResultProtocol
-class CloudStorageListResultProtocolMock: CloudStorageListResultProtocol {
+final class CloudStorageListResultProtocolMock: CloudStorageListResultProtocol {
 
     // MARK: - Methods
     func items() -> [CloudStorageReferencing] {
@@ -166,7 +166,7 @@ class CloudStorageListResultProtocolMock: CloudStorageListResultProtocol {
 }
 
 // MARK: - CloudStorageProtocol
-class CloudStorageProtocolMock: CloudStorageProtocol {
+final class CloudStorageProtocolMock: CloudStorageProtocol {
 
     // MARK: - Methods
     func reference() -> CloudStorageReferencing {
@@ -199,7 +199,7 @@ class CloudStorageProtocolMock: CloudStorageProtocol {
 }
 
 // MARK: - CloudStorageReferencing
-class CloudStorageReferencingMock: CloudStorageReferencing {
+final class CloudStorageReferencingMock: CloudStorageReferencing {
 
     // MARK: - Variables
     var bucket: String = ""
@@ -361,7 +361,7 @@ class CloudStorageReferencingMock: CloudStorageReferencing {
 }
 
 // MARK: - CloudStorageUploadTaskProtocol
-class CloudStorageUploadTaskProtocolMock: CloudStorageUploadTaskProtocol {
+final class CloudStorageUploadTaskProtocolMock: CloudStorageUploadTaskProtocol {
 
     // MARK: - Methods
     func cancel() {
@@ -391,7 +391,7 @@ class CloudStorageUploadTaskProtocolMock: CloudStorageUploadTaskProtocol {
 }
 
 // MARK: - FileStoring
-class FileStoringMock: FileStoring {
+final class FileStoringMock: FileStoring {
 
     // MARK: - Methods
     func file(path: String) -> FileStoring {
